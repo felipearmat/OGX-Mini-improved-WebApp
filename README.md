@@ -1,4 +1,4 @@
-# OGX-Mini-WebApp
-WebApp for changing settings on your OGX-Mini ([https://github.com/wiredopposite/OGX-Mini](Repo here)).
+# OGX-Mini-2026-WebApp
+WebApp for changing settings on your OGX-Mini ([https://github.com/MegaCadeDev/OGX-Mini-2026](Repo here)).
 
-Visit: [https://wiredopposite.github.io/OGX-Mini-WebApp/](https://wiredopposite.github.io/OGX-Mini-WebApp/)
+Visit: [https://megacadedev.github.io/OGX-Mini-2026-WebApp/]([https://wiredopposite.github.io/OGX-Mini-WebApp/](https://megacadedev.github.io/OGX-Mini-2026-WebApp/))
