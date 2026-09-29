@@ -14,8 +14,8 @@ export class DongleSettings {
     static OPTIONS = Object.freeze([
         {
             key: "disconnectPadsOnModeChange", offset: 1,
-            label: "Turn off controllers on mode change",
-            help: "Controllers switch off (light off) when the output mode changes, and reconnect with a button press.",
+            label: "Turn off controllers before mode change",
+            help: "Controllers switch off (light off) BEFORE changing mode to avoid getting stuck.",
         },
         {
             key: "joyconPairImuRight", offset: 2,

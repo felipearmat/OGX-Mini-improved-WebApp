@@ -10,7 +10,7 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
 
 - **Adapter Options**: dongle-wide settings stored on the adapter. The firmware build sets
   the defaults; this panel changes them. Saving restarts the adapter.
-  - Turn off controllers on mode change
+  - Turn off controllers before mode change
   - Joy-Con pair: motion from the right or the left Joy-Con
   - Joy-Con pair orientation (vertical / horizontal)
   - Single Joy-Con orientation (vertical / horizontal)
