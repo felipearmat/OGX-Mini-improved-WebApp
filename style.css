@@ -265,3 +265,34 @@ select:disabled {
     margin-top: 10px;
     margin-bottom: 15px;
 }
+/* Adapter Options (OGX-Mini-improved) */
+.dongleOptionsPanel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.dongleOptionsPanel.hidden,
+.togglePanelControl.hidden {
+    display: none;
+}
+
+.dongleOption {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) auto;
+    align-items: center;
+    gap: 4px 12px;
+}
+
+.dongleOptionHelp {
+    grid-column: 1 / -1;
+    font-size: 0.85em;
+    opacity: 0.75;
+}
+
+.dongleOptionsControls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}

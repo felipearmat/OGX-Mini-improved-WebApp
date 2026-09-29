@@ -3,6 +3,8 @@ import { UserSettings } from "../userSettings.js";
 import { UI } from "../uiSettings.js";
 import { Gamepad } from "../gamepad.js";
 import { Mutex } from "../mutex.js";
+import { DongleSettings } from "../dongleSettings.js";
+import { UIDongle } from "../uiDongle.js";
 
 class BTManager {
     static #getUuid(uuidSuffix) {
@@ -23,6 +25,8 @@ class BTManager {
         PROFILE : this.#getUuid('40'),
     
         GAMEPAD : this.#getUuid('50'),
+
+        DONGLE_SETTINGS : this.#getUuid('60'),   // OGX-Mini-improved firmware
     });
 
     static #PACKET_MAX_LEN = Object.freeze(20);
@@ -170,6 +174,23 @@ class BTManager {
         return success;
     }
 
+    // Adapter options (OGX-Mini-improved firmware). False when the adapter lacks them.
+    async getDongleSettings(dongleSettings) {
+        await this.#mutex.lock();
+        const buffer = await this.#tryRead(BTManager.UUID.DONGLE_SETTINGS);
+        this.#mutex.unlock();
+        return !!buffer && dongleSettings.setFromBytes(buffer);
+    }
+
+    // The adapter stores the options and restarts (the page reloads on disconnect).
+    async saveDongleSettings(dongleSettings) {
+        await this.stopGamepadTask();
+        await this.#mutex.lock();
+        const success = await this.#tryWrite(BTManager.UUID.DONGLE_SETTINGS, dongleSettings.getBytes());
+        this.#mutex.unlock();
+        return success;
+    }
+
     #gpTimer = null;
     static #GP_INTERVAL = Object.freeze(100);
 
@@ -301,6 +322,8 @@ export const BT = {
     async connect() {
         const userSettings = new UserSettings();
         UI.init(userSettings);
+        const dongleSettings = new DongleSettings();
+        UIDongle.init(dongleSettings);
         const btManager = new BTManager();
 
         try {
@@ -312,6 +335,10 @@ export const BT = {
 
             await btManager.getSetup(userSettings);
             await btManager.getProfileByIdx(userSettings);
+            if (await btManager.getDongleSettings(dongleSettings)) {
+                UIDongle.update(dongleSettings);
+                UIDongle.setAvailable(true);
+            }
             
             UI.updateAll(userSettings);
             UI.toggleConnected(true);
@@ -326,6 +353,10 @@ export const BT = {
                 console.log('Saving profile...', userSettings.profile);
                 await btManager.saveProfile(userSettings);
             }, userSettings);
+
+            UIDongle.addCallbackSave(async () => {
+                await btManager.saveDongleSettings(dongleSettings);
+            });
 
             UI.addCallbackDisconnect(async () => {
                 btManager.disconnect();

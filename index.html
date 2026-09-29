@@ -28,7 +28,7 @@
             <h3>Settings</h3>
             <button class="connectButton" id="connectUsb">Connect via USB</button>
             <button class="connectButton" id="connectBt">Connect via Bluetooth</button><br><br>
-            <label><b>Minimum firmware required:</b> OGX-Mini v1.0.0-alpha3</label><br><br>
+            <label><b>Minimum firmware required:</b> OGX-Mini v1.0.0-alpha3. Adapter Options need <a href="https://github.com/felipearmat/OGX-Mini-improved">OGX-Mini-improved</a> firmware.</label><br><br>
             <label><b>Note:</b> To ensure your OGX-Mini (wired) adapter is in WebApp mode, hold Start + Left Bumper + Right Bumper for 3 seconds.</label>
             <div class="separator"></div>
             <h3>Update Firmware</h3>
@@ -210,6 +210,23 @@
                 <div class="dropdownGrid">
                     <div id="analogButtonsInput-left" class="analogButtonsInput"></div>
                     <div id="analogButtonsInput-right" class="analogButtonsInput"></div>
+                </div>
+            </div>
+
+            <div class="togglePanelControl hidden" id="dongleOptionsControl">
+                <div class="header">
+                    <h3>Adapter Options</h3>
+                </div>
+                <div class="buttonPanel">
+                    <button id="button-toggleDongleOptions">Hide</button>
+                </div>
+            </div>
+
+            <div id="dongleOptionsPanel" class="dongleOptionsPanel hidden">
+                <div id="dongleOptionsInput" class="dongleOptionsInput"></div>
+                <div class="dongleOptionsControls">
+                    <button class="controlsButton" id="button-saveDongleOptions">Save Adapter Options</button>
+                    <label>Saving restarts the adapter.</label>
                 </div>
             </div>
 

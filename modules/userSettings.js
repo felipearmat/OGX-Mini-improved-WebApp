@@ -30,6 +30,9 @@ export class UserSettings {
             { label: "DInput",                   value: 6 },
             { label: "PS Classic",               value: 7 },
             { label: "Switch",                   value: 8 },
+            { label: "Wii U",                    value: 9 },
+            { label: "PS4",                      value: 15 },
+            { label: "STEAM (DualSense)",        value: 16 },
             { label: "WebApp",                   value: 100 },
         ]
     });

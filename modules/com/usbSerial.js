@@ -2,6 +2,8 @@ import { USBInterface } from "./usbInterface.js";
 import { Gamepad } from "../gamepad.js";
 import { UI } from "../uiSettings.js";
 import { UserSettings } from "../userSettings.js";
+import { DongleSettings } from "../dongleSettings.js";
+import { UIDongle } from "../uiDongle.js";
 
 class USBManager {
     static #PACKET_LENGTH = Object.freeze(64);
@@ -15,6 +17,8 @@ class USBManager {
         GET_PROFILE_BY_IDX: 0x55,
         SET_PROFILE_START: 0x60,
         SET_PROFILE: 0x61,
+        GET_DONGLE_SETTINGS: 0x70,
+        SET_DONGLE_SETTINGS: 0x71,
         SET_GP_IN: 0x80,
         SET_GP_OUT: 0x81,
         RESP_ERROR: 0xFF
@@ -36,15 +40,17 @@ class USBManager {
     #currentBufferInOffset = 0;
     #bufferIn = null;
     #userSettings = null;
+    #dongleSettings = null;
 
     constructor() {
         this.#interface = new USBInterface();
         this.#bufferIn = new Uint8Array(USBManager.#BUFFER_LEN);
     }
 
-    async init(userSettings) {
+    async init(userSettings, dongleSettings) {
         try {
             this.#userSettings = userSettings;
+            this.#dongleSettings = dongleSettings;
 
             if (await this.#interface.connect(USBManager.#BAUDRATE)) {
                 this.#interface.registerDisconnectCb(() => {
@@ -96,6 +102,17 @@ class USBManager {
 
     async disconnect() {
         await this.#interface.disconnect();
+    }
+
+    // Adapter options (OGX-Mini-improved firmware); older firmware ignores the request.
+    async getDongleSettings() {
+        let header = this.#headerFromUi(USBManager.#PACKET_ID.GET_DONGLE_SETTINGS);
+        await this.#writeToDevice(header, new Uint8Array([0xFF]));
+    }
+
+    async saveDongleSettings() {
+        let header = this.#headerFromUi(USBManager.#PACKET_ID.SET_DONGLE_SETTINGS);
+        await this.#writeToDevice(header, this.#dongleSettings.getBytes());
     }
 
     #headerFromUi(packetId) {
@@ -154,6 +171,13 @@ class USBManager {
                 this.#userSettings.deviceMode = header.deviceMode;
                 UI.updateAll(this.#userSettings);
                 break; 
+
+            case USBManager.#PACKET_ID.GET_DONGLE_SETTINGS:
+                if (this.#dongleSettings && this.#dongleSettings.setFromBytes(bufferIn.slice(0, dataLen))) {
+                    UIDongle.update(this.#dongleSettings);
+                    UIDongle.setAvailable(true);
+                }
+                break;
 
             case USBManager.#PACKET_ID.SET_GP_IN:
                 const gamepad = new Gamepad();
@@ -235,16 +259,19 @@ export const USB = {
 
         const userSettings = new UserSettings();
         UI.init(userSettings);
+        const dongleSettings = new DongleSettings();
+        UIDongle.init(dongleSettings);
         const usbManager = new USBManager();
 
         try {
             UI.connectButtonsEnabled(false);
 
-            if (!(await usbManager.init(userSettings))) {
+            if (!(await usbManager.init(userSettings, dongleSettings))) {
                 throw new Error("Connection failed.");
             }
 
             await usbManager.getProfileByIdx();
+            await usbManager.getDongleSettings();
 
             UI.updateAll(userSettings);
             UI.toggleConnected(true);
@@ -258,6 +285,10 @@ export const USB = {
             UI.addCallbackSaveProfile(async () => {
                 await usbManager.saveProfile();
             }, userSettings);
+
+            UIDongle.addCallbackSave(async () => {
+                await usbManager.saveDongleSettings();
+            });
 
             UI.addCallbackDisconnect(async () => {
                 await usbManager.disconnect();
