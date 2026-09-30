@@ -30,6 +30,9 @@ export class UserSettings {
             { label: "DInput",                   value: 6 },
             { label: "PS Classic",               value: 7 },
             { label: "Switch",                   value: 8 },
+            { label: "Wii U",                    value: 9 },
+            { label: "PS4",                      value: 15 },
+            { label: "STEAM (DualSense)",        value: 16 },
             { label: "WebApp",                   value: 100 },
         ]
     });
@@ -40,6 +43,7 @@ export class UserSettings {
         fields: [
             { label: "DInput", value: 6 },
             { label: "Switch", value: 8 },
+            { label: "Wii U",  value: 9 },
             { label: "WebApp", value: 100 },
         ]
     });
@@ -54,6 +58,9 @@ export class UserSettings {
             { label: "XInput",                   value: 4 },
             { label: "PS3",                      value: 5 },
             { label: "PS Classic",               value: 7 },
+            { label: "Wii U",                    value: 9 },
+            { label: "PS4",                      value: 15 },
+            { label: "STEAM (DualSense)",        value: 16 },
             { label: "WebApp",                   value: 100 },
         ]
     });
