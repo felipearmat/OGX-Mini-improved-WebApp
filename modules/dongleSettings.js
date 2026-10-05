@@ -45,7 +45,7 @@ export class DongleSettings {
         {
             key: "singleController", offset: 7,
             label: "Single controller",
-            help: "Accept one Bluetooth controller only: a lone Joy-Con does not wait for its other half, so adapters next to each other do not take each other's controllers. Also set with Start + RB + Up (on) / Start + RB + Down (off).",
+            help: "Accept one Bluetooth controller only: a lone Joy-Con does not wait for its other half, so adapters next to each other do not take each other's controllers. Also set with Start + L3 (on) / Start + L3 + LB (off).",
         },
     ]);
 
