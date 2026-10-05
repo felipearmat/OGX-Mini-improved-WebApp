@@ -25,6 +25,11 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
   stick as pointer, scroll, arrow keys or WASD; pointer / scroll speed, deadzone, acceleration,
   touchpad as pointer. Saving applies it right away (no restart);
   *Restore defaults* goes back to the firmware's layout.
+- **Rumble Test** (USB): plays a rumble on the connected controller the way a game asks for it —
+  left (strong) motor, right (weak) motor or both, at a chosen strength (5-100 %) for a chosen time
+  (0.1-5 s), plus Stop. USB packet `SET_GP_OUT` (0x81): left, right, duration in ms (uint16 LE);
+  the adapter answers with an empty `SET_GP_OUT`. Not over Bluetooth: the adapter stops BLE
+  advertising while a Bluetooth Classic controller (Joy-Con, DS4...) is connected.
 - Output modes added to the list: Wii U, PS4, STEAM (DualSense), Mouse + Keyboard.
 
 Everything else (profiles, stick and trigger settings, button mappings) works as in the

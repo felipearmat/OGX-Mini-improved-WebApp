@@ -6,6 +6,7 @@ import { DongleSettings } from "../dongleSettings.js";
 import { UIDongle } from "../uiDongle.js";
 import { KbmSettings } from "../kbmSettings.js";
 import { UIKbm } from "../uiKbm.js";
+import { UIRumble } from "../uiRumble.js";
 
 class USBManager {
     static #PACKET_LENGTH = Object.freeze(64);
@@ -133,6 +134,12 @@ class USBManager {
         await this.#writeToDevice(header, this.#kbmSettings.getBytes());
     }
 
+    // Rumble test (OGX-Mini-improved firmware): left / right motor 0-255, duration in ms.
+    async sendRumbleTest(left, right, durationMs) {
+        let header = this.#headerFromUi(USBManager.#PACKET_ID.SET_GP_OUT);
+        await this.#writeToDevice(header, new Uint8Array([left, right, durationMs & 0xFF, (durationMs >> 8) & 0xFF]));
+    }
+
     #headerFromUi(packetId) {
         return {
             packetLen: USBManager.#PACKET_LENGTH,
@@ -194,6 +201,7 @@ class USBManager {
                 if (this.#dongleSettings && this.#dongleSettings.setFromBytes(bufferIn.slice(0, dataLen))) {
                     UIDongle.update(this.#dongleSettings);
                     UIDongle.setAvailable(true);
+                    UIRumble.setAvailable(true);  // same firmware generation
                 }
                 break;
 
@@ -203,6 +211,10 @@ class USBManager {
                     UIKbm.setAvailable(true);
                     UIKbm.setStatus(`Mapping read from the adapter (${new Date().toLocaleTimeString()}).`);
                 }
+                break;
+
+            case USBManager.#PACKET_ID.SET_GP_OUT:
+                UIRumble.setStatus(`Sent (${new Date().toLocaleTimeString()}).`);
                 break;
 
             case USBManager.#PACKET_ID.SET_GP_IN:
@@ -317,6 +329,10 @@ export const USB = {
 
             UIDongle.addCallbackSave(async () => {
                 await usbManager.saveDongleSettings();
+            });
+
+            UIRumble.init(async (left, right, ms) => {
+                await usbManager.sendRumbleTest(left, right, ms);
             });
 
             UIKbm.addCallbackSave(async () => {
