@@ -4,6 +4,8 @@ import { UI } from "../uiSettings.js";
 import { UserSettings } from "../userSettings.js";
 import { DongleSettings } from "../dongleSettings.js";
 import { UIDongle } from "../uiDongle.js";
+import { KbmSettings } from "../kbmSettings.js";
+import { UIKbm } from "../uiKbm.js";
 
 class USBManager {
     static #PACKET_LENGTH = Object.freeze(64);
@@ -19,6 +21,8 @@ class USBManager {
         SET_PROFILE: 0x61,
         GET_DONGLE_SETTINGS: 0x70,
         SET_DONGLE_SETTINGS: 0x71,
+        GET_KBM_SETTINGS: 0x72,
+        SET_KBM_SETTINGS: 0x73,
         SET_GP_IN: 0x80,
         SET_GP_OUT: 0x81,
         RESP_ERROR: 0xFF
@@ -41,16 +45,18 @@ class USBManager {
     #bufferIn = null;
     #userSettings = null;
     #dongleSettings = null;
+    #kbmSettings = null;
 
     constructor() {
         this.#interface = new USBInterface();
         this.#bufferIn = new Uint8Array(USBManager.#BUFFER_LEN);
     }
 
-    async init(userSettings, dongleSettings) {
+    async init(userSettings, dongleSettings, kbmSettings) {
         try {
             this.#userSettings = userSettings;
             this.#dongleSettings = dongleSettings;
+            this.#kbmSettings = kbmSettings;
 
             if (await this.#interface.connect(USBManager.#BAUDRATE)) {
                 this.#interface.registerDisconnectCb(() => {
@@ -115,6 +121,18 @@ class USBManager {
         await this.#writeToDevice(header, this.#dongleSettings.getBytes());
     }
 
+    // Mouse + keyboard mapping (OGX-Mini-improved firmware); older firmware ignores the request.
+    async getKbmSettings() {
+        let header = this.#headerFromUi(USBManager.#PACKET_ID.GET_KBM_SETTINGS);
+        await this.#writeToDevice(header, new Uint8Array([0xFF]));
+    }
+
+    // Applied right away; the adapter answers with the stored mapping.
+    async saveKbmSettings() {
+        let header = this.#headerFromUi(USBManager.#PACKET_ID.SET_KBM_SETTINGS);
+        await this.#writeToDevice(header, this.#kbmSettings.getBytes());
+    }
+
     #headerFromUi(packetId) {
         return {
             packetLen: USBManager.#PACKET_LENGTH,
@@ -176,6 +194,14 @@ class USBManager {
                 if (this.#dongleSettings && this.#dongleSettings.setFromBytes(bufferIn.slice(0, dataLen))) {
                     UIDongle.update(this.#dongleSettings);
                     UIDongle.setAvailable(true);
+                }
+                break;
+
+            case USBManager.#PACKET_ID.GET_KBM_SETTINGS:
+                if (this.#kbmSettings && this.#kbmSettings.setFromBytes(bufferIn.slice(0, dataLen))) {
+                    UIKbm.update(this.#kbmSettings);
+                    UIKbm.setAvailable(true);
+                    UIKbm.setStatus(`Mapping read from the adapter (${new Date().toLocaleTimeString()}).`);
                 }
                 break;
 
@@ -261,17 +287,20 @@ export const USB = {
         UI.init(userSettings);
         const dongleSettings = new DongleSettings();
         UIDongle.init(dongleSettings);
+        const kbmSettings = new KbmSettings();
+        UIKbm.init(kbmSettings);
         const usbManager = new USBManager();
 
         try {
             UI.connectButtonsEnabled(false);
 
-            if (!(await usbManager.init(userSettings, dongleSettings))) {
+            if (!(await usbManager.init(userSettings, dongleSettings, kbmSettings))) {
                 throw new Error("Connection failed.");
             }
 
             await usbManager.getProfileByIdx();
             await usbManager.getDongleSettings();
+            await usbManager.getKbmSettings();
 
             UI.updateAll(userSettings);
             UI.toggleConnected(true);
@@ -288,6 +317,11 @@ export const USB = {
 
             UIDongle.addCallbackSave(async () => {
                 await usbManager.saveDongleSettings();
+            });
+
+            UIKbm.addCallbackSave(async () => {
+                UIKbm.setStatus("Saving...");
+                await usbManager.saveKbmSettings();
             });
 
             UI.addCallbackDisconnect(async () => {

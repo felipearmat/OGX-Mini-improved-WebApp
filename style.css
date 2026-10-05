@@ -296,3 +296,35 @@ select:disabled {
     align-items: center;
     gap: 12px;
 }
+
+/* Mouse + Keyboard Mode mapping (OGX-Mini-improved) */
+.kbmMapping {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.kbmAction {
+    display: grid;
+    grid-template-columns: minmax(160px, 1fr) minmax(140px, auto) auto;
+    align-items: center;
+    gap: 4px 12px;
+}
+
+.kbmMods {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.85em;
+}
+
+.kbmRangeValue {
+    min-width: 2em;
+    text-align: right;
+}
+
+@media (max-width: 600px) {
+    .kbmAction {
+        grid-template-columns: 1fr;
+    }
+}

@@ -33,6 +33,7 @@ export class UserSettings {
             { label: "Wii U",                    value: 9 },
             { label: "PS4",                      value: 15 },
             { label: "STEAM (DualSense)",        value: 16 },
+            { label: "Mouse + Keyboard",         value: 17 },
             { label: "WebApp",                   value: 100 },
         ]
     });

@@ -42,6 +42,11 @@ export class DongleSettings {
             label: "Legacy PS4 motion scale (Brook auth adapters)",
             help: "PS4 mode: the older motion scale, for authentication adapters that may expect it. Leave off on PC.",
         },
+        {
+            key: "singleController", offset: 7,
+            label: "Single controller",
+            help: "Accept one Bluetooth controller only: a lone Joy-Con does not wait for its other half, so adapters next to each other do not take each other's controllers. Also set with Start + RB + Up (on) / Start + RB + Down (off).",
+        },
     ]);
 
     constructor() {

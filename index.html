@@ -230,6 +230,26 @@
                 </div>
             </div>
 
+            <div class="togglePanelControl hidden" id="kbmOptionsControl">
+                <div class="header">
+                    <h3>Mouse + Keyboard Mode</h3>
+                </div>
+                <div class="buttonPanel">
+                    <button id="button-toggleKbmOptions">Hide</button>
+                </div>
+            </div>
+
+            <div id="kbmOptionsPanel" class="dongleOptionsPanel hidden">
+                <label>What each controller input sends in the Mouse + Keyboard output mode
+                    (Start + LB + RB + Up). Ctrl / Shift / Alt / Win are held together with a key.</label>
+                <div id="kbmOptionsInput" class="dongleOptionsInput"></div>
+                <div class="dongleOptionsControls">
+                    <button class="controlsButton" id="button-saveKbmOptions">Save Mouse + Keyboard</button>
+                    <button class="controlsButton" id="button-restoreKbmOptions">Restore defaults</button>
+                    <label id="kbmOptionsStatus">Applied right away, no restart.</label>
+                </div>
+            </div>
+
             <div class="controlsPanel">
                 <button class="controlsButton" id="button-saveProfile">Save Profile</button>
                 <button class="controlsButton" id="button-reloadProfile">Reload Profile</button>

@@ -5,6 +5,8 @@ import { Gamepad } from "../gamepad.js";
 import { Mutex } from "../mutex.js";
 import { DongleSettings } from "../dongleSettings.js";
 import { UIDongle } from "../uiDongle.js";
+import { KbmSettings } from "../kbmSettings.js";
+import { UIKbm } from "../uiKbm.js";
 
 class BTManager {
     static #getUuid(uuidSuffix) {
@@ -27,6 +29,7 @@ class BTManager {
         GAMEPAD : this.#getUuid('50'),
 
         DONGLE_SETTINGS : this.#getUuid('60'),   // OGX-Mini-improved firmware
+        KBM_SETTINGS    : this.#getUuid('70'),   // OGX-Mini-improved firmware
     });
 
     static #PACKET_MAX_LEN = Object.freeze(20);
@@ -191,6 +194,22 @@ class BTManager {
         return success;
     }
 
+    // Mouse + keyboard mapping (OGX-Mini-improved firmware). False when the adapter lacks it.
+    async getKbmSettings(kbmSettings) {
+        await this.#mutex.lock();
+        const buffer = await this.#tryRead(BTManager.UUID.KBM_SETTINGS);
+        this.#mutex.unlock();
+        return !!buffer && kbmSettings.setFromBytes(buffer);
+    }
+
+    // Applied right away, no restart.
+    async saveKbmSettings(kbmSettings) {
+        await this.#mutex.lock();
+        const success = await this.#tryWrite(BTManager.UUID.KBM_SETTINGS, kbmSettings.getBytes());
+        this.#mutex.unlock();
+        return success;
+    }
+
     #gpTimer = null;
     static #GP_INTERVAL = Object.freeze(100);
 
@@ -324,6 +343,8 @@ export const BT = {
         UI.init(userSettings);
         const dongleSettings = new DongleSettings();
         UIDongle.init(dongleSettings);
+        const kbmSettings = new KbmSettings();
+        UIKbm.init(kbmSettings);
         const btManager = new BTManager();
 
         try {
@@ -339,7 +360,11 @@ export const BT = {
                 UIDongle.update(dongleSettings);
                 UIDongle.setAvailable(true);
             }
-            
+            if (await btManager.getKbmSettings(kbmSettings)) {
+                UIKbm.update(kbmSettings);
+                UIKbm.setAvailable(true);
+            }
+
             UI.updateAll(userSettings);
             UI.toggleConnected(true);
             UI.setSubheaderText("Settings");
@@ -356,6 +381,12 @@ export const BT = {
 
             UIDongle.addCallbackSave(async () => {
                 await btManager.saveDongleSettings(dongleSettings);
+            });
+
+            UIKbm.addCallbackSave(async () => {
+                UIKbm.setStatus("Saving...");
+                const saved = await btManager.saveKbmSettings(kbmSettings);
+                UIKbm.setStatus(saved ? `Saved (${new Date().toLocaleTimeString()}).` : "Saving failed.");
             });
 
             UI.addCallbackDisconnect(async () => {
