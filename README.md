@@ -17,6 +17,7 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
   - Use a MAC address per controller (PS4 / STEAM modes)
   - Legacy PS4 motion scale (Brook auth adapters)
   - Single controller (a lone Joy-Con does not wait for its other half)
+  - Joy-Con pair rumble: per side (as SDL / Steam) or both Joy-Cons
 
   The panel appears only when the adapter's firmware supports it.
 - **Mouse + Keyboard Mode**: what each controller input sends in the firmware's mouse + keyboard
@@ -50,7 +51,9 @@ On Windows, `start.bat` does the same.
 
 ## Protocol notes (Adapter Options)
 
-8 bytes: a version byte (1), then one byte per option (0 / 1), in the order listed above.
+16 bytes: a version byte (2), then one byte per option (0 / 1), in the order listed above, the
+rest zero. Firmware from before the format grew answers with version 1 (the first 8 bytes); the
+page then shows only those options and saves in that format.
 USB: packets `GET_DONGLE_SETTINGS` (0x70) and `SET_DONGLE_SETTINGS` (0x71). Bluetooth:
 characteristic `12345678-1234-1234-1234-123456789060` (read / write). Firmware side:
 `Firmware/RP2040/src/Custom/DongleSettings.h`.

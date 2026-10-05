@@ -74,6 +74,12 @@ export const UIDongle = {
             if (!input) {
                 continue;
             }
+            // Hide options the connected firmware does not have yet.
+            const row = input.closest(".dongleOption");
+            const known = (option.since || 1) <= dongleSettings.version;
+            if (row) {
+                row.classList.toggle("hidden", !known);
+            }
             if (option.choices) {
                 input.value = String(dongleSettings.values[option.key]);
             } else {

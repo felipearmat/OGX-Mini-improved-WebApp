@@ -274,6 +274,7 @@ select:disabled {
 }
 
 .dongleOptionsPanel.hidden,
+.dongleOption.hidden,
 .togglePanelControl.hidden {
     display: none;
 }

@@ -1,13 +1,15 @@
 /*  Dongle-wide options (OGX-Mini-improved firmware).
  *
- *  Wire format, shared with the firmware (Custom/DongleSettings.h): 8 bytes, a version byte
- *  then one byte per option (0 / 1). USB: packets GET_DONGLE_SETTINGS (0x70) and
+ *  Wire format, shared with the firmware (Custom/DongleSettings.h): 16 bytes, a version byte
+ *  (2) then one byte per option (0 / 1). Firmware before the format grew sends version 1, the
+ *  first 8 bytes; the page then shows only those options and saves in that format. USB: packets GET_DONGLE_SETTINGS (0x70) and
  *  SET_DONGLE_SETTINGS (0x71). Bluetooth: characteristic ...9060 (read / write).
  *  Saving stores the options and restarts the adapter.
  */
 export class DongleSettings {
-    static VERSION = Object.freeze(1);
-    static LENGTH = Object.freeze(8);
+    static VERSION = Object.freeze(2);
+    static LENGTH = Object.freeze(16);
+    static V1_LENGTH = Object.freeze(8);
 
     // Byte offsets follow the firmware struct. "choices" options are shown as a dropdown,
     // the others as a checkbox.
@@ -47,31 +49,49 @@ export class DongleSettings {
             label: "Single controller",
             help: "Accept one Bluetooth controller only: a lone Joy-Con does not wait for its other half, so adapters next to each other do not take each other's controllers. Also set with Start + L3 (on) / Start + L3 + LB (off).",
         },
+        {
+            key: "joyconPairRumblePerSide", offset: 8, since: 2,
+            label: "Joy-Con pair rumble",
+            choices: [{ label: "Per side (as SDL / Steam)", value: 1 }, { label: "Both Joy-Cons", value: 0 }],
+            help: "Per side: the game's left (strong) motor rumbles the left Joy-Con and the right (weak) motor the right one, as when the pair is connected straight to a PC. Both: each Joy-Con plays both motors.",
+        },
     ]);
 
     constructor() {
         this.values = {};
+        this.version = DongleSettings.VERSION;
         for (const option of DongleSettings.OPTIONS) {
             this.values[option.key] = 0;
         }
     }
 
+    // Options the connected firmware knows (it answered in this.version).
+    availableOptions() {
+        return DongleSettings.OPTIONS.filter((option) => (option.since || 1) <= this.version);
+    }
+
     // False if the bytes are not a dongle settings record this page understands.
     setFromBytes(bytes) {
-        if (!(bytes instanceof Uint8Array) || bytes.length < DongleSettings.LENGTH ||
-            bytes[0] !== DongleSettings.VERSION) {
+        if (!(bytes instanceof Uint8Array)) {
             return false;
         }
-        for (const option of DongleSettings.OPTIONS) {
+        const v2 = bytes[0] === DongleSettings.VERSION && bytes.length >= DongleSettings.LENGTH;
+        const v1 = bytes[0] === 1 && bytes.length >= DongleSettings.V1_LENGTH;
+        if (!v2 && !v1) {
+            return false;
+        }
+        this.version = v2 ? DongleSettings.VERSION : 1;
+        for (const option of this.availableOptions()) {
             this.values[option.key] = bytes[option.offset] ? 1 : 0;
         }
         return true;
     }
 
     getBytes() {
-        const bytes = new Uint8Array(DongleSettings.LENGTH);
-        bytes[0] = DongleSettings.VERSION;
-        for (const option of DongleSettings.OPTIONS) {
+        // Same format the firmware answered with, so older firmware still accepts it.
+        const bytes = new Uint8Array(this.version === 1 ? DongleSettings.V1_LENGTH : DongleSettings.LENGTH);
+        bytes[0] = this.version;
+        for (const option of this.availableOptions()) {
             bytes[option.offset] = this.values[option.key] ? 1 : 0;
         }
         return bytes;
