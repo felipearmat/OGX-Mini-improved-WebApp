@@ -1,7 +1,8 @@
 /*  Mouse + keyboard mode mapping (OGX-Mini-improved firmware).
  *
  *  Wire format, shared with the firmware (Custom/KbmSettings.h): 48 bytes, a version byte, then
- *  a 2-byte action per pad input, the stick modes and the pointer / scroll settings. USB: packets
+ *  a 2-byte action per pad input, the stick modes, the pointer / scroll settings and 5 reserved
+ *  bytes. USB: packets
  *  GET_KBM_SETTINGS (0x72) and SET_KBM_SETTINGS (0x73, answered with the stored settings).
  *  Bluetooth: characteristic ...9070 (read / write). Saving applies the mapping right away.
  *
@@ -14,7 +15,7 @@ export class KbmSettings {
 
     static TYPE = Object.freeze({ NONE: 0, KEY: 1, MOUSE: 2, MEDIA: 3 });
     static MOD = Object.freeze({ CTRL: 0x01, SHIFT: 0x02, ALT: 0x04, GUI: 0x08 });
-    static FLAG = Object.freeze({ POINTER_ACCEL: 0x01, GYRO_POINTER: 0x02, TOUCHPAD: 0x04, INVERT_SCROLL: 0x08 });
+    static FLAG = Object.freeze({ POINTER_ACCEL: 0x01, TOUCHPAD: 0x04, INVERT_SCROLL: 0x08 });
 
     // Pad inputs, in firmware order (kbm_settings::Input).
     static INPUTS = Object.freeze([
@@ -96,8 +97,7 @@ export class KbmSettings {
         8,           // scroll speed
         12,          // deadzone %
         0x01 | 0x04, // pointer acceleration, touchpad
-        8,           // gyro speed
-        0, 0, 0, 0,
+        0, 0, 0, 0, 0,
     ]);
 
     constructor() {
@@ -122,7 +122,6 @@ export class KbmSettings {
         this.scrollSpeed = bytes[o + 3];
         this.deadzone = bytes[o + 4];
         this.flags = bytes[o + 5];
-        this.gyroSpeed = bytes[o + 6];
         return true;
     }
 
@@ -140,7 +139,6 @@ export class KbmSettings {
         bytes[o + 3] = this.scrollSpeed;
         bytes[o + 4] = this.deadzone;
         bytes[o + 5] = this.flags;
-        bytes[o + 6] = this.gyroSpeed;
         return bytes;
     }
 

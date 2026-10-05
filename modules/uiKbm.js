@@ -31,10 +31,6 @@ export const UIKbm = {
             KbmSettings.FLAG.POINTER_ACCEL, "Slow near the centre, fast at the edge of the stick."));
         container.appendChild(this._flagRow(kbmSettings, "kbm-flagTouchpad", "Touchpad moves the pointer",
             KbmSettings.FLAG.TOUCHPAD, "DS4 / DualSense: the touchpad works like a laptop touchpad; pressing it is a left click."));
-        container.appendChild(this._flagRow(kbmSettings, "kbm-flagGyro", "Motion moves the pointer",
-            KbmSettings.FLAG.GYRO_POINTER, "Pads with motion sensors (Joy-Con, DS4, DualSense, Switch Pro): turn the pad to move the pointer."));
-        container.appendChild(this._rangeRow("kbm-gyroSpeed", "Motion pointer speed", 1, 20,
-            (v) => { kbmSettings.gyroSpeed = v; }));
         container.appendChild(this._flagRow(kbmSettings, "kbm-flagInvertScroll", "Invert scroll",
             KbmSettings.FLAG.INVERT_SCROLL));
 
@@ -83,11 +79,9 @@ export const UIKbm = {
         set("kbm-pointerSpeed", kbmSettings.pointerSpeed);
         set("kbm-scrollSpeed", kbmSettings.scrollSpeed);
         set("kbm-deadzone", kbmSettings.deadzone);
-        set("kbm-gyroSpeed", kbmSettings.gyroSpeed);
         const flags = {
             "kbm-flagAccel": KbmSettings.FLAG.POINTER_ACCEL,
             "kbm-flagTouchpad": KbmSettings.FLAG.TOUCHPAD,
-            "kbm-flagGyro": KbmSettings.FLAG.GYRO_POINTER,
             "kbm-flagInvertScroll": KbmSettings.FLAG.INVERT_SCROLL,
         };
         for (const [id, bit] of Object.entries(flags)) {
