@@ -7,12 +7,13 @@ import { UIDongle } from "../uiDongle.js";
 import { KbmSettings } from "../kbmSettings.js";
 import { UIKbm } from "../uiKbm.js";
 import { UIRumble } from "../uiRumble.js";
+import { UIDiagnostics } from "../uiDiagnostics.js";
 
 class USBManager {
     static #PACKET_LENGTH = Object.freeze(64);
     static #HEADER_LENGTH = Object.freeze(9);
     static #BAUDRATE = Object.freeze(9600); 
-    static #BUFFER_LEN = Object.freeze(1024);
+    static #BUFFER_LEN = Object.freeze(16384);  // diagnostics reports are a few KB
 
     static #PACKET_ID = Object.freeze({
         NONE: 0,
@@ -24,6 +25,7 @@ class USBManager {
         SET_DONGLE_SETTINGS: 0x71,
         GET_KBM_SETTINGS: 0x72,
         SET_KBM_SETTINGS: 0x73,
+        GET_DIAGNOSTICS: 0x74,
         SET_GP_IN: 0x80,
         SET_GP_OUT: 0x81,
         RESP_ERROR: 0xFF
@@ -47,6 +49,7 @@ class USBManager {
     #userSettings = null;
     #dongleSettings = null;
     #kbmSettings = null;
+    #diagnosticsResolve = null;
 
     constructor() {
         this.#interface = new USBInterface();
@@ -134,6 +137,23 @@ class USBManager {
         await this.#writeToDevice(header, this.#kbmSettings.getBytes());
     }
 
+    // Diagnostics report (OGX-Mini-improved firmware): the parsed JSON, or null after 3 s
+    // without an answer (older firmware ignores the request).
+    async getDiagnostics() {
+        const answer = new Promise((resolve) => {
+            this.#diagnosticsResolve = resolve;
+            setTimeout(() => {
+                if (this.#diagnosticsResolve === resolve) {
+                    this.#diagnosticsResolve = null;
+                    resolve(null);
+                }
+            }, 3000);
+        });
+        let header = this.#headerFromUi(USBManager.#PACKET_ID.GET_DIAGNOSTICS);
+        await this.#writeToDevice(header, new Uint8Array([0xFF]));
+        return answer;
+    }
+
     // Rumble test (OGX-Mini-improved firmware): left / right motor 0-255, duration in ms.
     async sendRumbleTest(left, right, durationMs) {
         let header = this.#headerFromUi(USBManager.#PACKET_ID.SET_GP_OUT);
@@ -212,6 +232,20 @@ class USBManager {
                     UIKbm.setStatus(`Mapping read from the adapter (${new Date().toLocaleTimeString()}).`);
                 }
                 break;
+
+            case USBManager.#PACKET_ID.GET_DIAGNOSTICS: {
+                let report = null;
+                try {
+                    report = JSON.parse(new TextDecoder().decode(bufferIn.slice(0, dataLen)));
+                } catch (error) {
+                    console.warn("Diagnostics: bad JSON", error);
+                }
+                if (this.#diagnosticsResolve) {
+                    this.#diagnosticsResolve(report);
+                    this.#diagnosticsResolve = null;
+                }
+                break;
+            }
 
             case USBManager.#PACKET_ID.SET_GP_OUT:
                 UIRumble.setStatus(`Sent (${new Date().toLocaleTimeString()}).`);
@@ -330,6 +364,15 @@ export const USB = {
             UIDongle.addCallbackSave(async () => {
                 await usbManager.saveDongleSettings();
             });
+
+            UIDiagnostics.init(() => usbManager.getDiagnostics(), () => ({
+                connection: "USB",
+                device_mode: userSettings.deviceMode,
+                max_gamepads: userSettings.maxGamepads,
+                adapter_options: dongleSettings.version ? { version: dongleSettings.version, ...dongleSettings.values } : null,
+                mouse_keyboard_mapping: Array.from(kbmSettings.getBytes()),
+            }));
+            UIDiagnostics.setAvailable(true);
 
             UIRumble.init(async (left, right, ms) => {
                 await usbManager.sendRumbleTest(left, right, ms);

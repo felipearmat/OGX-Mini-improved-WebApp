@@ -329,3 +329,17 @@ select:disabled {
         grid-template-columns: 1fr;
     }
 }
+
+/* Diagnostics (OGX-Mini-improved) */
+.diagTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+}
+
+.diagTable th,
+.diagTable td {
+    text-align: left;
+    padding: 4px 8px;
+    border-bottom: 1px solid rgba(127, 127, 127, 0.3);
+}

@@ -230,6 +230,31 @@
                 </div>
             </div>
 
+            <div class="togglePanelControl hidden" id="diagnosticsControl">
+                <div class="header">
+                    <h3>Diagnostics</h3>
+                </div>
+                <div class="buttonPanel">
+                    <button id="button-toggleDiagnostics">Hide</button>
+                </div>
+            </div>
+
+            <div id="diagnosticsPanel" class="dongleOptionsPanel hidden">
+                <label>What the adapter measures for each controller (Bluetooth and USB). Keep moving the sticks while
+                    it measures: some controllers only report when something changes.</label>
+                <label id="diagInfo"></label>
+                <table class="diagTable">
+                    <thead><tr><th>Controller</th><th>Link</th><th>Reports/s</th><th>Late</th><th>Lost</th><th>Largest gap</th><th>Signal</th><th>Connected</th></tr></thead>
+                    <tbody id="diagControllers"></tbody>
+                </table>
+                <label id="diagPrevious"></label>
+                <div class="dongleOptionsControls">
+                    <button class="controlsButton" id="button-diagRefresh">Refresh</button>
+                    <button class="controlsButton" id="button-diagReport">Generate log report</button>
+                    <label id="diagStatus"></label>
+                </div>
+            </div>
+
             <div class="togglePanelControl hidden" id="rumbleTestControl">
                 <div class="header">
                     <h3>Rumble Test</h3>
