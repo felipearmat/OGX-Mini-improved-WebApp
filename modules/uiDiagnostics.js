@@ -60,6 +60,9 @@ export const UIDiagnostics = {
         const info = document.getElementById("diagInfo");
         info.textContent = `${report.board} (${report.chip}), firmware ${report.firmware} (${report.build}), ` +
             `mode ${report.output_mode}, up ${Math.round(report.uptime_ms / 1000)} s, last reset: ${report.last_reset}`;
+        if (report.bluetooth && report.bluetooth.bredr_inquiry_running) {
+            info.textContent += ". Searching for new Bluetooth controllers (slows down the connected ones)";
+        }
         const body = document.getElementById("diagControllers");
         body.innerHTML = "";
         const addRow = (cells) => {
@@ -85,7 +88,14 @@ export const UIDiagnostics = {
             if (c.bt_version) {
                 link += `, BT ${c.bt_version}`;
             }
-            let signal = c.rssi_dbm !== undefined ? `${c.rssi_dbm} dBm` : "-";
+            if (c.link_mode === "sniff") {
+                link += `, power saving (sniff, ${c.sniff_interval_ms} ms)`;
+            }
+            // Classic links report the distance from the receiver's ideal range, not dBm.
+            let signal = c.rssi_dbm !== undefined ? `${c.rssi_dbm} dBm`
+                : c.rssi_golden_range_db === undefined ? "-"
+                : c.rssi_golden_range_db === 0 ? "good"
+                : c.rssi_golden_range_db < 0 ? `weak (${c.rssi_golden_range_db} dB)` : `strong (+${c.rssi_golden_range_db} dB)`;
             if (c.channels_total) {
                 signal += `, ${c.channels_in_use}/${c.channels_total} channels`;
             }

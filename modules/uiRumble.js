@@ -1,7 +1,7 @@
 /*  "Rumble Test" panel (OGX-Mini-improved firmware, USB only). Plays a rumble on the connected
  *  controller through the same path as a game's rumble: left (strong) motor, right (weak) motor
  *  or both, at the chosen strength for the chosen time. Hidden until the adapter answers with
- *  its dongle settings (older firmware has neither). */
+ *  its dongle settings (older firmware has neither); shown only for modes with rumble (ModeView). */
 export const UIRumble = {
     built: false,
 

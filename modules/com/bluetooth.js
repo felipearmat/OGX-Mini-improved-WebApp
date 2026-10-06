@@ -356,6 +356,7 @@ export const BT = {
 
             await btManager.getSetup(userSettings);
             await btManager.getProfileByIdx(userSettings);
+            UI.setActiveMapping(userSettings.profile);  // the one the adapter uses
             if (await btManager.getDongleSettings(dongleSettings)) {
                 UIDongle.update(dongleSettings);
                 UIDongle.setAvailable(true);
@@ -387,6 +388,26 @@ export const BT = {
                 UIKbm.setStatus("Saving...");
                 const saved = await btManager.saveKbmSettings(kbmSettings);
                 UIKbm.setStatus(saved ? `Saved (${new Date().toLocaleTimeString()}).` : "Saving failed.");
+            });
+
+            // Mouse + Keyboard mode: the mapping is the profile (Save / Reload / Load Defaults).
+            UI.setKbmHandlers({
+                save: async () => {
+                    UIKbm.setStatus("Saving...");
+                    const saved = await btManager.saveKbmSettings(kbmSettings);
+                    UIKbm.setStatus(saved ? `Saved (${new Date().toLocaleTimeString()}).` : "Saving failed.");
+                },
+                reload: async () => {
+                    if (await btManager.getKbmSettings(kbmSettings)) {
+                        UIKbm.update(kbmSettings);
+                        UIKbm.setStatus(`Mapping read from the adapter (${new Date().toLocaleTimeString()}).`);
+                    }
+                },
+                defaults: () => {
+                    kbmSettings.restoreDefaults();
+                    UIKbm.update(kbmSettings);
+                    UIKbm.setStatus("Default layout loaded; Save Profile stores it.");
+                },
             });
 
             UI.addCallbackDisconnect(async () => {

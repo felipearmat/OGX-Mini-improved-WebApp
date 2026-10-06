@@ -3,6 +3,8 @@ import { JoystickVisualizer } from "./joystick/joystickVisualizer.js";
 import { TriggerSettings } from "./trigger/triggerSettings.js";
 import { TriggerVisualizer } from "./trigger/triggerVisualizer.js";
 import { UserSettings } from "./userSettings.js";
+import { ModeView } from "./modeView.js";
+import { KbmSettings } from "./kbmSettings.js";
 
 const SliderSnapThreshold = 0.02;
 
@@ -312,6 +314,7 @@ function uiSetupGeneralSettings(userSettings) {
 
     elementDeviceMode.addEventListener("change", () => {
         userSettings.deviceMode = parseInt(elementDeviceMode.value, 10);
+        ModeView.setMode(userSettings.deviceMode);
     });
 
     const elementEnableAnalog = document.getElementById("checkbox-analogEnabled");
@@ -420,16 +423,33 @@ export const UI = {
         const loadDefaultButton = document.getElementById("button-loadDefaults");
         if (loadDefaultButton) {
             loadDefaultButton.addEventListener("click", () => {
+                if (ModeView.isKbm() && this.kbmHandlers) {
+                    this.kbmHandlers.defaults();
+                    return;
+                }
                 userSettings.resetProfile();
                 UI.updateAll(userSettings);
             });
         }
     },
 
+    /*  Mouse + Keyboard mode: its mapping is the profile. handlers = { save, reload, defaults };
+     *  save stores the mapping before the profile is saved (which switches the adapter's mode). */
+    kbmHandlers: null,
+
+    setKbmHandlers(handlers) {
+        this.kbmHandlers = handlers;
+    },
+
     addCallbackSaveProfile(listenerFunc, userSettings) {
         const saveButton = document.getElementById("button-saveProfile");
         if (saveButton) {
-            saveButton.addEventListener("click", () => listenerFunc());
+            saveButton.addEventListener("click", async () => {
+                if (ModeView.isKbm() && this.kbmHandlers) {
+                    await this.kbmHandlers.save();
+                }
+                listenerFunc();
+            });
         } else {
             console.warn("Save button not found.");
         }
@@ -443,6 +463,10 @@ export const UI = {
         const reloadButton = document.getElementById("button-reloadProfile");
         if (reloadButton) {
             reloadButton.addEventListener("click", () => {
+                if (ModeView.isKbm() && this.kbmHandlers) {
+                    this.kbmHandlers.reload();
+                    return;
+                }
                 const profileIdDropdown = document.getElementById("dropdown-profileId");
                 if (profileIdDropdown) {
                     userSettings.profile.profileId = parseInt(profileIdDropdown.value, 10);
@@ -589,6 +613,70 @@ export const UI = {
         if (elementEnableAnalog) {
             elementEnableAnalog.checked = userSettings.profile.analogEnabled;
         }
+        ModeView.setMode(userSettings.deviceMode);
+    },
+
+    /*  Live input arrives already mapped by the profile active on the adapter, so the row of a
+     *  physical input is found through that profile: setActiveMapping() keeps a copy of it, taken
+     *  when it is read from the adapter (edits in the page apply only after saving). */
+    activeMapping: null,
+
+    setActiveMapping(profile) {
+        const mapping = {};
+        for (const [key, value] of Object.entries(profile)) {
+            if (typeof value === "number") {
+                mapping[key] = value;
+            }
+        }
+        this.activeMapping = mapping;
+    },
+
+    // Physical inputs pressed in this report, by profile field key (dpadUp, buttonA...), plus
+    // the triggers as "triggerL" / "triggerR".
+    pressedInputs(gamepad, userSettings) {
+        const mapping = this.activeMapping || {};
+        const pressed = new Set();
+        const report = gamepad.report;
+        for (const field of userSettings.getDpadFields()) {
+            const bits = mapping[field.key] ?? field.def;
+            if (bits && (report.dpad & bits) === bits) {
+                pressed.add(field.key);
+            }
+        }
+        for (const field of userSettings.getButtonFields()) {
+            const bits = mapping[field.key] ?? field.def;
+            if (bits && (report.buttons & bits)) {
+                pressed.add(field.key);
+            }
+        }
+        if (report.triggerL > 64) {
+            pressed.add("triggerL");
+        }
+        if (report.triggerR > 64) {
+            pressed.add("triggerR");
+        }
+        return pressed;
+    },
+
+    highlightInputs(gamepad, userSettings) {
+        const pressed = this.pressedInputs(gamepad, userSettings);
+        const mark = (element, on) => {
+            if (element && element.classList.contains("inputActive") !== on) {
+                element.classList.toggle("inputActive", on);
+            }
+        };
+        for (const field of [...userSettings.getDpadFields(), ...userSettings.getButtonFields()]) {
+            mark(document.getElementById(`dropdown-${field.key}`)?.parentElement, pressed.has(field.key));
+        }
+        // Analog mappings are named after the digital input they belong to (analogOffA = A).
+        for (const field of userSettings.getAnalogFields()) {
+            const name = field.key.replace("analogOff", "");
+            const digital = ["Up", "Down", "Left", "Right"].includes(name) ? `dpad${name}` : `button${name}`;
+            mark(document.getElementById(`dropdown-${field.key}`)?.parentElement, pressed.has(digital));
+        }
+        KbmSettings.INPUT_KEYS.forEach((key, i) => {
+            mark(document.getElementById(`kbm-action-${i}`)?.parentElement, pressed.has(key));
+        });
     },
 
     drawGamepadInput(gamepad, userSettings) {
@@ -613,6 +701,7 @@ export const UI = {
         joyVisualizerR.drawInput(joyRx, joyRy, userSettings.profile[`joystickSettings-right`], prevJoyR);
         trigVisualizerL.drawInput(triggerL, userSettings.profile[`triggerSettings-left`], prevTrigL);
         trigVisualizerR.drawInput(triggerR, userSettings.profile[`triggerSettings-right`], prevTrigR);
+        this.highlightInputs(gamepad, userSettings);
     },
 
     connectButtonsEnabled(enabled) {

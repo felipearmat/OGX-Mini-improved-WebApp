@@ -23,13 +23,20 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
 - **Mouse + Keyboard Mode**: what each controller input sends in the firmware's mouse + keyboard
   output mode — any key (with Ctrl / Shift / Alt / Win held), a mouse button or a media key; each
   stick as pointer, scroll, arrow keys or WASD; pointer / scroll speed, deadzone, acceleration,
-  touchpad as pointer. Saving applies it right away (no restart);
-  *Restore defaults* goes back to the firmware's layout.
+  touchpad as pointer. It is the profile of that mode: with *Mouse + Keyboard* selected as the
+  device mode, it replaces the axis and button mappings, *Save Profile* stores it (and switches the
+  adapter to that mode, as for any mode), *Reload Profile* reads it back and *Load Defaults* goes
+  back to the firmware's layout.
+- **Live input in the mappings**: each mapping row (D-pad, buttons, analog, Mouse + Keyboard)
+  lights up green while its controller input is pressed. Live input arrives already mapped by the
+  profile the adapter uses; the page maps it back with the profile it read at connection.
 - **Rumble Test** (USB): plays a rumble on the connected controller the way a game asks for it —
   left (strong) motor, right (weak) motor or both, at a chosen strength (5-100 %) for a chosen time
   (0.1-5 s), plus Stop. USB packet `SET_GP_OUT` (0x81): left, right, duration in ms (uint16 LE);
   the adapter answers with an empty `SET_GP_OUT`. Not over Bluetooth: the adapter stops BLE
-  advertising while a Bluetooth Classic controller (Joy-Con, DS4...) is connected.
+  advertising while a Bluetooth Classic controller (Joy-Con, DS4...) is connected. Shown only for
+  device modes that pass a game's rumble to the controller (Xbox OG, Steel Battalion, XInput, PS3,
+  Switch, PS4, STEAM, and Web App itself).
 - **Diagnostics** (USB, Web App mode): what the adapter measures for each controller — link
   (Bluetooth Classic / LE interval, Bluetooth version, wired or 2.4 GHz receiver), reports per
   second, late and lost reports, largest gap, signal and radio channels in use — and the summary

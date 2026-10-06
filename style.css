@@ -343,3 +343,16 @@ select:disabled {
     padding: 4px 8px;
     border-bottom: 1px solid rgba(127, 127, 127, 0.3);
 }
+
+/* Settings sections the selected device mode does not use (modules/modeView.js). Separate from
+ * "hidden", which the sections' Show / Hide buttons toggle. */
+.modeHidden {
+    display: none !important;
+}
+
+/* Mapping row whose controller input is pressed right now. */
+.inputActive {
+    background-color: #c8f0c8;
+    border-radius: 4px;
+    transition: background-color 0.08s;
+}

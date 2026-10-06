@@ -24,6 +24,13 @@ export class KbmSettings {
         "D-pad Up", "D-pad Down", "D-pad Left", "D-pad Right",
     ]);
 
+    // The same inputs as gamepad profile field keys (live input highlighting in the web app).
+    static INPUT_KEYS = Object.freeze([
+        "buttonA", "buttonB", "buttonX", "buttonY", "buttonLb", "buttonRb", "triggerL", "triggerR",
+        "buttonL3", "buttonR3", "buttonStart", "buttonBack", "buttonSys", "buttonMisc",
+        "dpadUp", "dpadDown", "dpadLeft", "dpadRight",
+    ]);
+
     static STICK_MODES = Object.freeze([
         { label: "Nothing", value: 0 },
         { label: "Mouse pointer", value: 1 },

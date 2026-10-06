@@ -206,6 +206,7 @@ class USBManager {
                 this.#userSettings.maxGamepads = header.maxGamepads;
                 this.#userSettings.playerIdx = header.playerIdx;
                 this.#userSettings.deviceMode = header.deviceMode;
+                UI.setActiveMapping(this.#userSettings.profile);  // the one the adapter uses
                 UI.updateAll(this.#userSettings);
                 break;
 
@@ -381,6 +382,23 @@ export const USB = {
             UIKbm.addCallbackSave(async () => {
                 UIKbm.setStatus("Saving...");
                 await usbManager.saveKbmSettings();
+            });
+
+            // Mouse + Keyboard mode: the mapping is the profile (Save / Reload / Load Defaults).
+            UI.setKbmHandlers({
+                save: async () => {
+                    UIKbm.setStatus("Saving...");
+                    await usbManager.saveKbmSettings();
+                    await new Promise((resolve) => setTimeout(resolve, 300));  // stored before the mode change
+                },
+                reload: async () => {
+                    await usbManager.getKbmSettings();
+                },
+                defaults: () => {
+                    kbmSettings.restoreDefaults();
+                    UIKbm.update(kbmSettings);
+                    UIKbm.setStatus("Default layout loaded; Save Profile stores it.");
+                },
             });
 
             UI.addCallbackDisconnect(async () => {

@@ -1,4 +1,5 @@
 import { KbmSettings } from "./kbmSettings.js";
+import { ModeView } from "./modeView.js";
 
 /*  "Mouse + Keyboard Mode" panel (OGX-Mini-improved firmware). Hidden until the adapter answers
  *  with its mapping; older firmware never does. */
@@ -92,7 +93,8 @@ export const UIKbm = {
         }
     },
 
-    // Show or hide the whole section (adapter support).
+    // Show or hide the whole section (adapter support); shown only in Mouse + Keyboard mode
+    // (ModeView).
     setAvailable(available) {
         for (const id of ["kbmOptionsControl", "kbmOptionsPanel"]) {
             const element = document.getElementById(id);
@@ -100,6 +102,7 @@ export const UIKbm = {
                 element.classList.toggle("hidden", !available);
             }
         }
+        ModeView.setKbmAvailable(available);
     },
 
     setStatus(text) {
