@@ -82,6 +82,24 @@
                 </div>
             </div>
 
+            <div class="togglePanelControl modeHidden" id="touchpadControl">
+                <div class="header">
+                    <h3>Touchpad</h3>
+                </div>
+                <div class="buttonPanel">
+                    <button id="button-toggleTouchpad">Hide</button>
+                </div>
+            </div>
+
+            <div id="touchpadPanel" class="dongleOptionsPanel modeHidden">
+                <label>DS4 / DualSense touchpad as the adapter reads it (USB): a green ball per finger.</label>
+                <canvas id="canvasTouchpad" width="384" height="216"></canvas>
+                <div class="touchpadInfo">
+                    <div id="touchpadPressInput" class="digitalButtonInput"></div>
+                    <span id="touchpadStatus">No finger on the touchpad</span>
+                </div>
+            </div>
+
             <div class="togglePanelControl" id="axisSettingsControl">
                 <div class="header">
                     <h3>Axis Settings</h3>
@@ -175,24 +193,6 @@
                 </div>
             </div>
 
-            <div class="togglePanelControl modeHidden" id="touchpadControl">
-                <div class="header">
-                    <h3>Touchpad</h3>
-                </div>
-                <div class="buttonPanel">
-                    <button id="button-toggleTouchpad">Hide</button>
-                </div>
-            </div>
-
-            <div id="touchpadPanel" class="dongleOptionsPanel modeHidden">
-                <label>DS4 / DualSense touchpad as the adapter reads it (USB): a green ball per finger.</label>
-                <canvas id="canvasTouchpad" width="384" height="216"></canvas>
-                <div class="touchpadInfo">
-                    <span id="touchpadPress">Touchpad press: released</span>
-                    <span id="touchpadStatus">No finger on the touchpad</span>
-                </div>
-            </div>
-
             <div class="togglePanelControl" id="digitalButtonsControl">
                 <div class="header">
                     <h3>Digital Mappings</h3>
@@ -233,48 +233,6 @@
                 <div class="dropdownGrid">
                     <div id="analogButtonsInput-left" class="analogButtonsInput"></div>
                     <div id="analogButtonsInput-right" class="analogButtonsInput"></div>
-                </div>
-            </div>
-
-            <div class="togglePanelControl hidden" id="dongleOptionsControl">
-                <div class="header">
-                    <h3>Adapter Options</h3>
-                </div>
-                <div class="buttonPanel">
-                    <button id="button-toggleDongleOptions">Hide</button>
-                </div>
-            </div>
-
-            <div id="dongleOptionsPanel" class="dongleOptionsPanel hidden">
-                <div id="dongleOptionsInput" class="dongleOptionsInput"></div>
-                <div class="dongleOptionsControls">
-                    <button class="controlsButton" id="button-saveDongleOptions">Save Adapter Options</button>
-                    <label>Saving restarts the adapter.</label>
-                </div>
-            </div>
-
-            <div class="togglePanelControl hidden" id="diagnosticsControl">
-                <div class="header">
-                    <h3>Diagnostics</h3>
-                </div>
-                <div class="buttonPanel">
-                    <button id="button-toggleDiagnostics">Hide</button>
-                </div>
-            </div>
-
-            <div id="diagnosticsPanel" class="dongleOptionsPanel hidden">
-                <label>What the adapter measures for each controller (Bluetooth and USB). Keep moving the sticks while
-                    it measures: some controllers only report when something changes.</label>
-                <label id="diagInfo"></label>
-                <table class="diagTable">
-                    <thead><tr><th>Controller</th><th>Link</th><th>Reports/s</th><th>Late</th><th>Lost</th><th>Largest gap</th><th>Signal</th><th>Connected</th></tr></thead>
-                    <tbody id="diagControllers"></tbody>
-                </table>
-                <label id="diagPrevious"></label>
-                <div class="dongleOptionsControls">
-                    <button class="controlsButton" id="button-diagRefresh">Refresh</button>
-                    <button class="controlsButton" id="button-diagReport">Generate log report</button>
-                    <label id="diagStatus"></label>
                 </div>
             </div>
 
@@ -329,6 +287,48 @@
                     <button class="controlsButton" id="button-saveKbmOptions">Save Mouse + Keyboard</button>
                     <button class="controlsButton" id="button-restoreKbmOptions">Restore defaults</button>
                     <label id="kbmOptionsStatus"></label>
+                </div>
+            </div>
+
+            <div class="togglePanelControl hidden" id="diagnosticsControl">
+                <div class="header">
+                    <h3>Diagnostics</h3>
+                </div>
+                <div class="buttonPanel">
+                    <button id="button-toggleDiagnostics">Hide</button>
+                </div>
+            </div>
+
+            <div id="diagnosticsPanel" class="dongleOptionsPanel hidden">
+                <label>What the adapter measures for each controller (Bluetooth and USB). Keep moving the sticks while
+                    it measures: some controllers only report when something changes.</label>
+                <label id="diagInfo"></label>
+                <table class="diagTable">
+                    <thead><tr><th>Controller</th><th>Link</th><th>Reports/s</th><th>Late</th><th>Lost</th><th>Largest gap</th><th>Signal</th><th>Connected</th></tr></thead>
+                    <tbody id="diagControllers"></tbody>
+                </table>
+                <label id="diagPrevious"></label>
+                <div class="dongleOptionsControls">
+                    <button class="controlsButton" id="button-diagRefresh">Refresh</button>
+                    <button class="controlsButton" id="button-diagReport">Generate log report</button>
+                    <label id="diagStatus"></label>
+                </div>
+            </div>
+
+            <div class="togglePanelControl hidden" id="dongleOptionsControl">
+                <div class="header">
+                    <h3>Adapter Options</h3>
+                </div>
+                <div class="buttonPanel">
+                    <button id="button-toggleDongleOptions">Hide</button>
+                </div>
+            </div>
+
+            <div id="dongleOptionsPanel" class="dongleOptionsPanel hidden">
+                <div id="dongleOptionsInput" class="dongleOptionsInput"></div>
+                <div class="dongleOptionsControls">
+                    <button class="controlsButton" id="button-saveDongleOptions">Save Adapter Options</button>
+                    <label>Saving restarts the adapter.</label>
                 </div>
             </div>
 

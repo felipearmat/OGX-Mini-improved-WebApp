@@ -371,14 +371,19 @@ select:disabled {
 /* Touchpad panel (modules/uiTouchpad.js). */
 #canvasTouchpad {
     display: block;
-    max-width: 100%;
-    margin: 8px 0;
+    width: 100%;
+    max-width: 25rem;
+    height: auto;
+    margin: 8px auto;
     background-color: #f0f0f0;
     border-radius: 6px;
 }
 
 .touchpadInfo {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
     gap: 16px;
 }
 

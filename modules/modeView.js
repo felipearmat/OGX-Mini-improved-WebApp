@@ -21,8 +21,9 @@ export const ModeView = {
     KBM_SECTIONS: ["kbmOptionsControl", "kbmOptionsPanel"],
     KBM_OWN_BUTTONS: ["button-saveKbmOptions", "button-restoreKbmOptions"],
     RUMBLE_SECTIONS: ["rumbleTestControl", "rumbleTestPanel"],
-    // Modes that use a DS4 / DualSense touchpad: PS4, STEAM, Mouse + Keyboard (pointer).
-    TOUCHPAD_MODES: new Set([15, 16, 17]),
+    // Modes that use a DS4 / DualSense touchpad: PS4, STEAM, Mouse + Keyboard (pointer), and
+    // Web App mode (generic: shows what the adapter reads).
+    TOUCHPAD_MODES: new Set([15, 16, 17, 100]),
     TOUCHPAD_SECTIONS: ["touchpadControl", "touchpadPanel"],
 
     mode: 100,

@@ -232,6 +232,27 @@ function uiGenerateButtonSettings(userSettings) {
         }
     });
 
+    /* Touchpad press (the Misc button) in the Touchpad panel too, kept in step with the Misc row. */
+    const touchContainer = document.getElementById("touchpadPressInput");
+    const miscField = buttonFields.find((field) => field.key === "buttonMisc");
+    if (touchContainer && miscField) {
+        const element = uiCreateButtonDropdown(userSettings, { ...miscField, key: "touchpadPress", label: "Touchpad press" }, buttonFields);
+        const touchDropdown = element.querySelector("select");
+        touchDropdown.value = userSettings.profile.buttonMisc;
+        touchDropdown.addEventListener("change", () => {
+            userSettings.profile.buttonMisc = parseInt(touchDropdown.value, 10);
+            delete userSettings.profile.touchpadPress;
+            const misc = document.getElementById("dropdown-buttonMisc");
+            if (misc) {
+                misc.value = touchDropdown.value;
+            }
+        });
+        document.getElementById("dropdown-buttonMisc")?.addEventListener("change", (event) => {
+            touchDropdown.value = event.target.value;
+        });
+        touchContainer.appendChild(element);
+    }
+
     const analogFields = userSettings.getAnalogFields();
     const analogContainerPrefix = "analogButtonsInput";
     containerSuffix = "left";
@@ -608,6 +629,10 @@ export const UI = {
         updateButtonDropdowns(userSettings.getDpadFields(), "digitalDpadInput");
         updateButtonDropdowns(userSettings.getButtonFields(), "digitalButtonInput");
         updateButtonDropdowns(userSettings.getAnalogFields(), "analogButtonsInput");
+        const touchDropdown = document.getElementById("dropdown-touchpadPress");
+        if (touchDropdown) {
+            touchDropdown.value = userSettings.profile.buttonMisc;
+        }
     
         const elementEnableAnalog = document.getElementById("checkbox-analogEnabled");
         if (elementEnableAnalog) {
@@ -657,6 +682,7 @@ export const UI = {
             const digital = ["Up", "Down", "Left", "Right"].includes(name) ? `dpad${name}` : `button${name}`;
             mark(document.getElementById(`dropdown-${field.key}`)?.parentElement, pressed.has(digital));
         }
+        mark(document.getElementById("dropdown-touchpadPress")?.parentElement, pressed.has("buttonMisc"));
         KbmSettings.INPUT_KEYS.forEach((key, i) => {
             mark(document.getElementById(`kbm-action-${i}`)?.parentElement, pressed.has(key));
         });

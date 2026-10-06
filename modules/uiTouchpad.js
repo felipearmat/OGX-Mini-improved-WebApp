@@ -1,7 +1,8 @@
 /*  "Touchpad" panel (OGX-Mini-improved firmware, USB): where the fingers are on a DS4 /
  *  DualSense touchpad (a green ball per touch) and whether the touchpad is pressed. Fed by the
  *  GP_TOUCH packet (0x82): two touch points as the pads send them, 4 bytes each (bit 7 of the
- *  first byte set = not touching; X 12 bits, Y 12 bits), then the click byte. */
+ *  first byte set = not touching; X 12 bits, Y 12 bits), then the click byte. The touchpad press
+ *  is the Misc button: its mapping row ("Touchpad press") is part of the panel. */
 export const UITouchpad = {
     // Touchpad coordinates: X 0-1919 on both pads, Y 0-942 (DS4) / 0-1079 (DualSense).
     MAX_X: 1920,
@@ -33,12 +34,7 @@ export const UITouchpad = {
             touches++;
         }
 
-        const pressed = bytes[8] !== 0;
-        const press = document.getElementById("touchpadPress");
-        if (press) {
-            press.classList.toggle("inputActive", pressed);
-            press.textContent = pressed ? "Touchpad press: pressed" : "Touchpad press: released";
-        }
+        // The press is the Misc button: its mapping row lights up with the live input.
         const status = document.getElementById("touchpadStatus");
         if (status) {
             status.textContent = touches ? `${touches} finger${touches > 1 ? "s" : ""}` : "No finger on the touchpad";
