@@ -121,7 +121,7 @@ export const UIDongle = {
             const combo = DongleSettings.MODE_COMBOS[mode];
             if (hint) {
                 hint.textContent = combo
-                    ? `Combo: ${combo} (hold 3 s)${mode === WEBAPP ? ", always on: the way back to the web app" : ""}`
+                    ? `${combo} (hold 3 s)${mode === WEBAPP ? ", always on: the way back to the web app" : ""}`
                     : "No combo for this mode";
             }
         };
