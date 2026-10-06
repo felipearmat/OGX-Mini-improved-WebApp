@@ -28,8 +28,8 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
   adapter to that mode, as for any mode), *Reload Profile* reads it back and *Load Defaults* goes
   back to the firmware's layout.
 - **Live input in the mappings**: each mapping row (D-pad, buttons, analog, Mouse + Keyboard)
-  lights up green while its controller input is pressed. Live input arrives already mapped by the
-  profile the adapter uses; the page maps it back with the profile it read at connection.
+  lights up green while its controller input is pressed — the controller's own button, whatever it
+  is mapped to (OGX-Mini-improved firmware sends unmapped input in Web App mode).
 - **Rumble Test** (USB): plays a rumble on the connected controller the way a game asks for it —
   left (strong) motor, right (weak) motor or both, at a chosen strength (5-100 %) for a chosen time
   (0.1-5 s), plus Stop. USB packet `SET_GP_OUT` (0x81): left, right, duration in ms (uint16 LE);

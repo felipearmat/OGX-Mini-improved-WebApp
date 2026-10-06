@@ -616,36 +616,19 @@ export const UI = {
         ModeView.setMode(userSettings.deviceMode);
     },
 
-    /*  Live input arrives already mapped by the profile active on the adapter, so the row of a
-     *  physical input is found through that profile: setActiveMapping() keeps a copy of it, taken
-     *  when it is read from the adapter (edits in the page apply only after saving). */
-    activeMapping: null,
-
-    setActiveMapping(profile) {
-        const mapping = {};
-        for (const [key, value] of Object.entries(profile)) {
-            if (typeof value === "number") {
-                mapping[key] = value;
-            }
-        }
-        this.activeMapping = mapping;
-    },
-
-    // Physical inputs pressed in this report, by profile field key (dpadUp, buttonA...), plus
-    // the triggers as "triggerL" / "triggerR".
+    /*  Controller inputs pressed in this report, by profile field key (dpadUp, buttonA...), plus
+     *  the triggers as "triggerL" / "triggerR". In Web App mode the adapter sends the controller's
+     *  own buttons (no profile mapping), so each row lights up for its physical input. */
     pressedInputs(gamepad, userSettings) {
-        const mapping = this.activeMapping || {};
         const pressed = new Set();
         const report = gamepad.report;
         for (const field of userSettings.getDpadFields()) {
-            const bits = mapping[field.key] ?? field.def;
-            if (bits && (report.dpad & bits) === bits) {
+            if (report.dpad & field.def) {
                 pressed.add(field.key);
             }
         }
         for (const field of userSettings.getButtonFields()) {
-            const bits = mapping[field.key] ?? field.def;
-            if (bits && (report.buttons & bits)) {
+            if (report.buttons & field.def) {
                 pressed.add(field.key);
             }
         }

@@ -206,7 +206,6 @@ class USBManager {
                 this.#userSettings.maxGamepads = header.maxGamepads;
                 this.#userSettings.playerIdx = header.playerIdx;
                 this.#userSettings.deviceMode = header.deviceMode;
-                UI.setActiveMapping(this.#userSettings.profile);  // the one the adapter uses
                 UI.updateAll(this.#userSettings);
                 break;
 

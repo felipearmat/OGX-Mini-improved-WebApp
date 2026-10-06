@@ -356,7 +356,6 @@ export const BT = {
 
             await btManager.getSetup(userSettings);
             await btManager.getProfileByIdx(userSettings);
-            UI.setActiveMapping(userSettings.profile);  // the one the adapter uses
             if (await btManager.getDongleSettings(dongleSettings)) {
                 UIDongle.update(dongleSettings);
                 UIDongle.setAvailable(true);
