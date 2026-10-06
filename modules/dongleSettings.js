@@ -5,6 +5,10 @@
  *  first 8 bytes; the page then shows only those options and saves in that format. USB: packets GET_DONGLE_SETTINGS (0x70) and
  *  SET_DONGLE_SETTINGS (0x71). Bluetooth: characteristic ...9060 (read / write).
  *  Saving stores the options and restarts the adapter.
+ *
+ *  Bytes 12-15 (version 2): output modes whose button combo is off, a little-endian bit mask
+ *  (bit n = device mode n); zero turns every combo on. Web App mode (100) is always on. Saving a
+ *  change of the mask alone applies it right away, without a restart.
  */
 export class DongleSettings {
     static VERSION = Object.freeze(2);
@@ -57,9 +61,13 @@ export class DongleSettings {
         },
     ]);
 
+    static COMBO_MASK_OFFSET = Object.freeze(12);
+
     constructor() {
         this.values = {};
         this.version = DongleSettings.VERSION;
+        this.comboDisabledModes = 0;
+        this.storedBytes = null;  // as last read from the adapter
         for (const option of DongleSettings.OPTIONS) {
             this.values[option.key] = 0;
         }
@@ -84,7 +92,40 @@ export class DongleSettings {
         for (const option of this.availableOptions()) {
             this.values[option.key] = bytes[option.offset] ? 1 : 0;
         }
+        const o = DongleSettings.COMBO_MASK_OFFSET;
+        this.comboDisabledModes = v2 ? (bytes[o] | (bytes[o + 1] << 8) | (bytes[o + 2] << 16) | (bytes[o + 3] << 24)) >>> 0 : 0;
+        this.storedBytes = bytes.slice(0, v2 ? DongleSettings.LENGTH : DongleSettings.V1_LENGTH);
         return true;
+    }
+
+    // Whether the button combo may switch the adapter to this device mode.
+    comboEnabled(mode) {
+        return mode >= 32 || ((this.comboDisabledModes >>> mode) & 1) === 0;
+    }
+
+    setComboEnabled(mode, enabled) {
+        if (mode >= 32) {
+            return;
+        }
+        const bit = (1 << mode) >>> 0;
+        this.comboDisabledModes = (enabled ? (this.comboDisabledModes & ~bit) : (this.comboDisabledModes | bit)) >>> 0;
+    }
+
+    // The settings as stored on the adapter with only the combo mask changed (no restart, and
+    // unsaved edits in the Adapter Options panel are left out).
+    comboBytes() {
+        const bytes = new Uint8Array(this.storedBytes || this.getBytes());
+        this.#writeMask(bytes);
+        return bytes;
+    }
+
+    #writeMask(bytes) {
+        const o = DongleSettings.COMBO_MASK_OFFSET;
+        if (bytes.length >= o + 4) {
+            for (let i = 0; i < 4; i++) {
+                bytes[o + i] = (this.comboDisabledModes >>> (8 * i)) & 0xFF;
+            }
+        }
     }
 
     getBytes() {
@@ -94,6 +135,7 @@ export class DongleSettings {
         for (const option of this.availableOptions()) {
             bytes[option.offset] = this.values[option.key] ? 1 : 0;
         }
+        this.#writeMask(bytes);
         return bytes;
     }
 }

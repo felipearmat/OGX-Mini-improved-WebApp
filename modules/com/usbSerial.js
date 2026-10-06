@@ -125,6 +125,12 @@ class USBManager {
         await this.#writeToDevice(header, this.#dongleSettings.getBytes());
     }
 
+    // Given bytes (the mode combo list alone: applied without a restart).
+    async saveDongleBytes(bytes) {
+        let header = this.#headerFromUi(USBManager.#PACKET_ID.SET_DONGLE_SETTINGS);
+        await this.#writeToDevice(header, bytes);
+    }
+
     // Mouse + keyboard mapping (OGX-Mini-improved firmware); older firmware ignores the request.
     async getKbmSettings() {
         let header = this.#headerFromUi(USBManager.#PACKET_ID.GET_KBM_SETTINGS);
@@ -221,6 +227,9 @@ class USBManager {
                 if (this.#dongleSettings && this.#dongleSettings.setFromBytes(bufferIn.slice(0, dataLen))) {
                     UIDongle.update(this.#dongleSettings);
                     UIDongle.setAvailable(true);
+                    if (UIDongle.refreshModeCombo) {
+                        UIDongle.refreshModeCombo();
+                    }
                     UIRumble.setAvailable(true);  // same firmware generation
                 }
                 break;
@@ -363,6 +372,9 @@ export const USB = {
 
             UIDongle.addCallbackSave(async () => {
                 await usbManager.saveDongleSettings();
+            });
+            UIDongle.initModeCombo(dongleSettings, async (bytes) => {
+                await usbManager.saveDongleBytes(bytes);
             });
 
             UIDiagnostics.init(() => usbManager.getDiagnostics(), () => ({

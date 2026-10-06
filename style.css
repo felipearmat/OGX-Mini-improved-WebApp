@@ -356,3 +356,9 @@ select:disabled {
     border-radius: 4px;
     transition: background-color 0.08s;
 }
+
+/* Button combo on / off for the selected device mode (under the Device Mode dropdown). */
+.modeCombo {
+    margin-top: 6px;
+    font-size: 0.9em;
+}

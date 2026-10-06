@@ -1,4 +1,5 @@
 import { DongleSettings } from "./dongleSettings.js";
+import { ModeView } from "./modeView.js";
 
 /*  "Adapter Options" panel (OGX-Mini-improved firmware). Hidden until the adapter answers with
  *  its dongle settings; older firmware never does. */
@@ -97,6 +98,39 @@ export const UIDongle = {
             }
         }
     },
+
+    /*  The checkbox under the Device Mode dropdown: whether the button combo may switch to the
+     *  selected mode. Saved right away (saveFunc(bytes)); Web App mode always keeps its combo. */
+    initModeCombo(dongleSettings, saveFunc) {
+        const row = document.getElementById("modeComboRow");
+        const box = document.getElementById("checkbox-modeCombo");
+        const label = document.getElementById("label-modeCombo");
+        const dropdown = document.getElementById("dropdown-deviceMode");
+        if (!row || !box || !dropdown) {
+            return;
+        }
+        const WEBAPP = 100;
+        const show = () => {
+            // Only once the adapter answered with a record that has the combo list.
+            row.classList.toggle("hidden", !dongleSettings.storedBytes || dongleSettings.version < 2);
+            const mode = Number(dropdown.value);
+            box.checked = dongleSettings.comboEnabled(mode);
+            box.disabled = mode === WEBAPP;
+            label.textContent = mode === WEBAPP
+                ? "Button combo switches to this mode (always on: the way back to the web app)"
+                : "Button combo switches to this mode";
+        };
+        ModeView.addListener(show);  // dropdown changed by the user or by a profile read
+        box.addEventListener("change", async () => {
+            dongleSettings.setComboEnabled(Number(dropdown.value), box.checked);
+            await saveFunc(dongleSettings.comboBytes());
+            dongleSettings.storedBytes = dongleSettings.comboBytes();
+        });
+        this.refreshModeCombo = show;
+        show();
+    },
+
+    refreshModeCombo: null,
 
     addCallbackSave(listenerFunc) {
         const button = document.getElementById("button-saveDongleOptions");

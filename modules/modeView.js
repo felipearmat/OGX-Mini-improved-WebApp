@@ -24,6 +24,12 @@ export const ModeView = {
 
     mode: 100,
     kbmAvailable: false,
+    listeners: [],
+
+    // Called after every mode change (and every apply()).
+    addListener(fn) {
+        this.listeners.push(fn);
+    },
 
     setMode(mode) {
         this.mode = Number(mode);
@@ -63,6 +69,9 @@ export const ModeView = {
         if (profile) {
             profile.disabled = kbm;  // one mapping, stored on the adapter
             profile.title = kbm ? "Mouse + Keyboard mode has one mapping, stored on the adapter." : "";
+        }
+        for (const fn of this.listeners) {
+            fn(this.mode);
         }
     },
 };

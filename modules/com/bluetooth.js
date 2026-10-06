@@ -194,6 +194,14 @@ class BTManager {
         return success;
     }
 
+    // Given bytes (the mode combo list alone: applied without a restart).
+    async saveDongleBytes(bytes) {
+        await this.#mutex.lock();
+        const success = await this.#tryWrite(BTManager.UUID.DONGLE_SETTINGS, bytes);
+        this.#mutex.unlock();
+        return success;
+    }
+
     // Mouse + keyboard mapping (OGX-Mini-improved firmware). False when the adapter lacks it.
     async getKbmSettings(kbmSettings) {
         await this.#mutex.lock();
@@ -381,6 +389,9 @@ export const BT = {
 
             UIDongle.addCallbackSave(async () => {
                 await btManager.saveDongleSettings(dongleSettings);
+            });
+            UIDongle.initModeCombo(dongleSettings, async (bytes) => {
+                await btManager.saveDongleBytes(bytes);
             });
 
             UIKbm.addCallbackSave(async () => {
