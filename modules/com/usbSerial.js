@@ -7,6 +7,7 @@ import { UIDongle } from "../uiDongle.js";
 import { KbmSettings } from "../kbmSettings.js";
 import { UIKbm } from "../uiKbm.js";
 import { UIRumble } from "../uiRumble.js";
+import { UITouchpad } from "../uiTouchpad.js";
 import { UIDiagnostics } from "../uiDiagnostics.js";
 
 class USBManager {
@@ -27,6 +28,7 @@ class USBManager {
         SET_KBM_SETTINGS: 0x73,
         GET_DIAGNOSTICS: 0x74,
         SET_GP_IN: 0x80,
+        GP_TOUCH: 0x82,
         SET_GP_OUT: 0x81,
         RESP_ERROR: 0xFF
     });
@@ -260,6 +262,10 @@ class USBManager {
                 UIRumble.setStatus(`Sent (${new Date().toLocaleTimeString()}).`);
                 break;
 
+            case USBManager.#PACKET_ID.GP_TOUCH:
+                UITouchpad.draw(bufferIn.subarray(0, dataLen));
+                break;
+
             case USBManager.#PACKET_ID.SET_GP_IN:
                 const gamepad = new Gamepad();
                 gamepad.setReportFromBytes(bufferIn.subarray(0, dataLen));
@@ -385,6 +391,7 @@ export const USB = {
                 mouse_keyboard_mapping: Array.from(kbmSettings.getBytes()),
             }));
             UIDiagnostics.setAvailable(true);
+            UITouchpad.initToggle();
 
             UIRumble.init(async (left, right, ms) => {
                 await usbManager.sendRumbleTest(left, right, ms);

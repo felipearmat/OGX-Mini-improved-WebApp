@@ -27,10 +27,14 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
   device mode, it replaces the axis and button mappings, *Save Profile* stores it (and switches the
   adapter to that mode, as for any mode), *Reload Profile* reads it back and *Load Defaults* goes
   back to the firmware's layout.
-- **Mode combos on / off**: a checkbox under the Device Mode dropdown turns the selected mode's
-  button combo on or off (saved right away, no restart), so a game's button chords cannot switch
-  the adapter by accident. The Web App mode combo is always on. Stored in the Adapter Options
+- **Mode combos on / off**: *Mode Enabled* under the Device Mode dropdown turns the selected
+  mode's button combo on or off (saved right away, no restart; the combo itself is shown below
+  it), so a game's button chords cannot switch the adapter by accident. The Web App mode combo is always on. Stored in the Adapter Options
   record, bytes 12-15 (bit mask by mode).
+- **Touchpad** (USB; PS4, STEAM and Mouse + Keyboard modes): the DS4 / DualSense touchpad as
+  the adapter reads it, a green ball per finger, and whether it is pressed. USB packet `GP_TOUCH`
+  (0x82), sent after each live input packet while the pad reports its touchpad: two touch points
+  of 4 bytes as the pads send them, then the click byte.
 - **Live input in the mappings**: each mapping row (D-pad, buttons, analog, Mouse + Keyboard)
   lights up green while its controller input is pressed — the controller's own button, whatever it
   is mapped to (OGX-Mini-improved firmware sends unmapped input in Web App mode).

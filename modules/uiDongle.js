@@ -110,21 +110,29 @@ export const UIDongle = {
             return;
         }
         const WEBAPP = 100;
+        const hint = document.getElementById("modeComboHint");
         const show = () => {
             // Only once the adapter answered with a record that has the combo list.
             row.classList.toggle("hidden", !dongleSettings.storedBytes || dongleSettings.version < 2);
             const mode = Number(dropdown.value);
             box.checked = dongleSettings.comboEnabled(mode);
             box.disabled = mode === WEBAPP;
-            label.textContent = mode === WEBAPP
-                ? "Button combo switches to this mode (always on: the way back to the web app)"
-                : "Button combo switches to this mode";
+            label.textContent = "Mode Enabled";
+            const combo = DongleSettings.MODE_COMBOS[mode];
+            if (hint) {
+                hint.textContent = combo
+                    ? `Combo: ${combo} (hold 3 s)${mode === WEBAPP ? ", always on: the way back to the web app" : ""}`
+                    : "No combo for this mode";
+            }
         };
         ModeView.addListener(show);  // dropdown changed by the user or by a profile read
         box.addEventListener("change", async () => {
             dongleSettings.setComboEnabled(Number(dropdown.value), box.checked);
             await saveFunc(dongleSettings.comboBytes());
             dongleSettings.storedBytes = dongleSettings.comboBytes();
+            if (hint) {
+                hint.textContent += ` - saved (${new Date().toLocaleTimeString()})`;
+            }
         });
         this.refreshModeCombo = show;
         show();

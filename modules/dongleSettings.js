@@ -63,6 +63,23 @@ export class DongleSettings {
 
     static COMBO_MASK_OFFSET = Object.freeze(12);
 
+    // Button combo of each device mode (firmware UserSettings.cpp ButtonCombo), Xbox names.
+    static MODE_COMBOS = Object.freeze({
+        1: "Start + D-pad Right",
+        2: "Start + RB + D-pad Right",
+        3: "Start + LB + D-pad Right",
+        4: "Start + D-pad Up",
+        5: "Start + D-pad Left",
+        6: "Start + RB + D-pad Left",
+        7: "Start + A",
+        8: "Start + D-pad Down",
+        9: "Start + LB + D-pad Down",
+        15: "Start + LB + D-pad Left",
+        16: "Start + LB + D-pad Up",
+        17: "Start + RB + D-pad Up",
+        100: "Start + LB + RB",
+    });
+
     constructor() {
         this.values = {};
         this.version = DongleSettings.VERSION;

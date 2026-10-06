@@ -21,6 +21,9 @@ export const ModeView = {
     KBM_SECTIONS: ["kbmOptionsControl", "kbmOptionsPanel"],
     KBM_OWN_BUTTONS: ["button-saveKbmOptions", "button-restoreKbmOptions"],
     RUMBLE_SECTIONS: ["rumbleTestControl", "rumbleTestPanel"],
+    // Modes that use a DS4 / DualSense touchpad: PS4, STEAM, Mouse + Keyboard (pointer).
+    TOUCHPAD_MODES: new Set([15, 16, 17]),
+    TOUCHPAD_SECTIONS: ["touchpadControl", "touchpadPanel"],
 
     mode: 100,
     kbmAvailable: false,
@@ -64,6 +67,7 @@ export const ModeView = {
         set(this.KBM_SECTIONS, !kbm);
         set(this.KBM_OWN_BUTTONS, kbm);  // the profile buttons save / restore the mapping
         set(this.RUMBLE_SECTIONS, !this.hasRumble());
+        set(this.TOUCHPAD_SECTIONS, !this.TOUCHPAD_MODES.has(this.mode));
 
         const profile = document.getElementById("dropdown-profileId");
         if (profile) {

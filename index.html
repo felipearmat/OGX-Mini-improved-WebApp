@@ -64,7 +64,8 @@
                     </div>
                     <div class="modeCombo hidden" id="modeComboRow">
                         <input type="checkbox" id="checkbox-modeCombo">
-                        <label for="checkbox-modeCombo" id="label-modeCombo">Button combo switches to this mode</label>
+                        <label for="checkbox-modeCombo" id="label-modeCombo">Mode Enabled</label>
+                        <div class="modeComboHint" id="modeComboHint"></div>
                     </div>
                 </div>
                 <div class="section">
@@ -171,6 +172,24 @@
                             <div id="triggerInput-right" class="triggerInput"></div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="togglePanelControl modeHidden" id="touchpadControl">
+                <div class="header">
+                    <h3>Touchpad</h3>
+                </div>
+                <div class="buttonPanel">
+                    <button id="button-toggleTouchpad">Hide</button>
+                </div>
+            </div>
+
+            <div id="touchpadPanel" class="dongleOptionsPanel modeHidden">
+                <label>DS4 / DualSense touchpad as the adapter reads it (USB): a green ball per finger.</label>
+                <canvas id="canvasTouchpad" width="384" height="216"></canvas>
+                <div class="touchpadInfo">
+                    <span id="touchpadPress">Touchpad press: released</span>
+                    <span id="touchpadStatus">No finger on the touchpad</span>
                 </div>
             </div>
 

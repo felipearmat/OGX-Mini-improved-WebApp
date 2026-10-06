@@ -362,3 +362,26 @@ select:disabled {
     margin-top: 6px;
     font-size: 0.9em;
 }
+
+.modeComboHint {
+    font-size: 0.85em;
+    opacity: 0.8;
+}
+
+/* Touchpad panel (modules/uiTouchpad.js). */
+#canvasTouchpad {
+    display: block;
+    max-width: 100%;
+    margin: 8px 0;
+    background-color: #f0f0f0;
+    border-radius: 6px;
+}
+
+.touchpadInfo {
+    display: flex;
+    gap: 16px;
+}
+
+.touchpadInfo span {
+    padding: 2px 6px;
+}
