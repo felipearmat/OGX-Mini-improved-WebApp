@@ -34,7 +34,7 @@ export const UIDongle = {
                 input.step = "1";
                 input.className = "dongleNumber";
                 input.addEventListener("change", () => {
-                    const v = Math.min(option.number.max, Math.max(option.number.min, Math.round(Number(input.value) || option.number.def)));
+                    const v = Math.min(option.number.max, Math.max(option.number.min, Math.round(Number(input.value) || 0)));
                     input.value = String(v);
                     dongleSettings.values[option.key] = v;
                 });
@@ -61,6 +61,22 @@ export const UIDongle = {
 
             row.appendChild(label);
             row.appendChild(input);
+            if (option.noLimit) {
+                const box = document.createElement("input");
+                box.type = "checkbox";
+                box.id = `${id}-noLimit`;
+                const boxLabel = document.createElement("label");
+                boxLabel.htmlFor = box.id;
+                boxLabel.textContent = "No limit";
+                box.addEventListener("change", () => {
+                    input.disabled = box.checked;
+                    dongleSettings.values[option.key] = box.checked
+                        ? DongleSettings.SEARCH_NO_LIMIT
+                        : Math.min(option.number.max, Math.max(option.number.min, Math.round(Number(input.value) || 0)));
+                });
+                row.appendChild(box);
+                row.appendChild(boxLabel);
+            }
             if (option.help) {
                 const help = document.createElement("div");
                 help.className = "dongleOptionHelp";
@@ -89,11 +105,19 @@ export const UIDongle = {
             }
             // Hide options the connected firmware does not have yet.
             const row = input.closest(".dongleOption");
-            const known = (option.since || 1) <= dongleSettings.version;
+            const known = (option.since || 1) <= dongleSettings.version && dongleSettings.version <= (option.until || 99);
             if (row) {
                 row.classList.toggle("hidden", !known);
             }
-            if (option.choices || option.number) {
+            if (option.noLimit) {
+                const box = document.getElementById(`dongle-${option.key}-noLimit`);
+                const unlimited = dongleSettings.values[option.key] === DongleSettings.SEARCH_NO_LIMIT;
+                if (box) {
+                    box.checked = unlimited;
+                }
+                input.disabled = unlimited;
+                input.value = String(unlimited ? option.number.def : dongleSettings.values[option.key]);
+            } else if (option.choices || option.number) {
                 input.value = String(dongleSettings.values[option.key]);
             } else {
                 input.checked = dongleSettings.values[option.key] !== 0;

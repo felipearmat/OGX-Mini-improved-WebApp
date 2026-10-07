@@ -16,10 +16,11 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
   - Single Joy-Con orientation (vertical / horizontal)
   - Use a MAC address per controller (PS4 / STEAM modes)
   - Legacy PS4 motion scale (Brook auth adapters)
-  - Single controller (a lone Joy-Con does not wait for its other half)
   - Joy-Con pair rumble: per side (as SDL / Steam) or both Joy-Cons
-  - Full search for new controllers (seconds, default 60): how long an open slot (a lone
-    Joy-Con, free slots) keeps the full search before it drops to about 10%; no restart needed
+  - Search for new controllers once one is connected, while a slot is open (a lone Joy-Con,
+    free slots): full search (0-600 s, default 60), then reduced search at about 10% (0-600 s or
+    no limit, the default); both 0 = no search with a controller connected. No restart needed.
+    Firmware from before these settings shows its *Single controller* option instead.
 
   The panel appears only when the adapter's firmware supports it.
 - **Mouse + Keyboard Mode**: what each controller input sends in the firmware's mouse + keyboard
@@ -82,9 +83,11 @@ On Windows, `start.bat` does the same.
 
 ## Protocol notes (Adapter Options)
 
-16 bytes: a version byte (2), then one byte per option (0 / 1), in the order listed above, the
-rest zero. Firmware from before the format grew answers with version 1 (the first 8 bytes); the
-page then shows only those options and saves in that format.
+16 bytes: a version byte (3), then one byte per option (0 / 1) in bytes 1-6 and 8 (byte 7 is
+unused); bytes 9-11 hold the two search times as 12-bit second counts (full = bits 0-11,
+reduced = bits 12-23, 4095 = no limit); bytes 12-15 the mode combo mask. Older firmware answers
+with version 2 (byte 7 = single controller, no search times) or 1 (the first 8 bytes); the page
+then shows only those options and saves in that format.
 USB: packets `GET_DONGLE_SETTINGS` (0x70) and `SET_DONGLE_SETTINGS` (0x71). Bluetooth:
 characteristic `12345678-1234-1234-1234-123456789060` (read / write). Firmware side:
 `Firmware/RP2040/src/Custom/DongleSettings.h`.

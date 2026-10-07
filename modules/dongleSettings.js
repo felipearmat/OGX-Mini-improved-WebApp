@@ -1,17 +1,23 @@
 /*  Dongle-wide options (OGX-Mini-improved firmware).
  *
  *  Wire format, shared with the firmware (Custom/DongleSettings.h): 16 bytes, a version byte
- *  (2) then one byte per option (0 / 1). Firmware before the format grew sends version 1, the
- *  first 8 bytes; the page then shows only those options and saves in that format. USB: packets GET_DONGLE_SETTINGS (0x70) and
- *  SET_DONGLE_SETTINGS (0x71). Bluetooth: characteristic ...9060 (read / write).
- *  Saving stores the options and restarts the adapter.
+ *  (3) then one byte per option (0 / 1). Older firmware answers with version 2 (16 bytes, with
+ *  the single controller option in byte 7) or 1 (the first 8 bytes); the page then shows only
+ *  the options that version has and saves in that format. USB: packets GET_DONGLE_SETTINGS
+ *  (0x70) and SET_DONGLE_SETTINGS (0x71). Bluetooth: characteristic ...9060 (read / write).
+ *  Saving stores the options and restarts the adapter, unless only the live ones changed.
  *
+ *  Version 3, bytes 9-11: search for new controllers while a slot is open with a controller
+ *  connected, two 12-bit second counts (full search = bits 0-11, reduced search = bits 12-23),
+ *  0-600 s; 4095 for the reduced search = no limit. Applied without a restart.
  *  Bytes 12-15 (version 2): output modes whose button combo is off, a little-endian bit mask
  *  (bit n = device mode n); zero turns every combo on. Web App mode (100) is always on. Saving a
  *  change of the mask alone applies it right away, without a restart.
  */
 export class DongleSettings {
-    static VERSION = Object.freeze(2);
+    static VERSION = Object.freeze(3);
+    static SEARCH_MAX_S = Object.freeze(600);
+    static SEARCH_NO_LIMIT = Object.freeze(0xFFF);
     static LENGTH = Object.freeze(16);
     static V1_LENGTH = Object.freeze(8);
 
@@ -49,7 +55,7 @@ export class DongleSettings {
             help: "PS4 mode: the older motion scale, for authentication adapters that may expect it. Leave off on PC.",
         },
         {
-            key: "singleController", offset: 7,
+            key: "singleController", offset: 7, until: 2,
             label: "Single controller",
             help: "Accept one Bluetooth controller only: a lone Joy-Con does not wait for its other half, so adapters next to each other do not take each other's controllers. Also set with Start + L3 (on) / Start + L3 + LB (off).",
         },
@@ -60,9 +66,15 @@ export class DongleSettings {
             help: "Per side: the game's left (strong) motor rumbles the left Joy-Con and the right (weak) motor the right one, as when the pair is connected straight to a PC. Both: each Joy-Con plays both motors.",
         },
         {
-            key: "fullSearchSeconds", offset: 9, since: 2, number: { min: 1, max: 255, def: 60 },
+            key: "fullSearchSeconds", search: "full", since: 3, number: { min: 0, max: 600, def: 60 },
             label: "Full search for new controllers (seconds)",
-            help: "While a slot is open with a controller connected (a lone Joy-Con waiting for its other half, or free slots), the adapter searches at full speed for this long, then at about 10% so the connected controllers keep the radio. New controllers still pair during the reduced search, just slower (up to about 40 s); known ones reconnect at once. Applied without a restart.",
+            help: "While a slot is open with a controller connected (a lone Joy-Con waiting for its other half, or free slots), the adapter first searches at full speed for this long. Searching takes radio time from the connected controllers. With no controller connected it always searches at full speed. Applied without a restart.",
+        },
+        {
+            key: "reducedSearchSeconds", search: "reduced", since: 3, number: { min: 0, max: 600, def: 600 },
+            noLimit: true,
+            label: "Then reduced search (seconds)",
+            help: "After the full search, the adapter keeps searching at about 10% for this long (or with no limit), then stops; the board LED stays on. New controllers still pair during the reduced search, just slower (up to about 40 s); known controllers reconnect at once even when the search has stopped. Both times 0 = no search once a controller is connected. Start + L3 on the controller (3 s) stops the current search; a controller going away starts it again. Applied without a restart.",
         },
     ]);
 
@@ -93,11 +105,13 @@ export class DongleSettings {
         for (const option of DongleSettings.OPTIONS) {
             this.values[option.key] = option.number ? option.number.def : 0;
         }
+        this.values.reducedSearchSeconds = DongleSettings.SEARCH_NO_LIMIT;
     }
 
     // Options the connected firmware knows (it answered in this.version).
     availableOptions() {
-        return DongleSettings.OPTIONS.filter((option) => (option.since || 1) <= this.version);
+        return DongleSettings.OPTIONS.filter((option) =>
+            (option.since || 1) <= this.version && this.version <= (option.until || 99));
     }
 
     // False if the bytes are not a dongle settings record this page understands.
@@ -105,20 +119,25 @@ export class DongleSettings {
         if (!(bytes instanceof Uint8Array)) {
             return false;
         }
-        const v2 = bytes[0] === DongleSettings.VERSION && bytes.length >= DongleSettings.LENGTH;
-        const v1 = bytes[0] === 1 && bytes.length >= DongleSettings.V1_LENGTH;
-        if (!v2 && !v1) {
+        const full = bytes.length >= DongleSettings.LENGTH;
+        const version = bytes[0];
+        if (!((version === 3 || version === 2) && full) && !(version === 1 && bytes.length >= DongleSettings.V1_LENGTH)) {
             return false;
         }
-        this.version = v2 ? DongleSettings.VERSION : 1;
+        this.version = version;
         for (const option of this.availableOptions()) {
-            this.values[option.key] = option.number
-                ? (bytes[option.offset] || option.number.def)  // 0 = the firmware default
-                : (bytes[option.offset] ? 1 : 0);
+            if (option.search) {
+                continue;
+            }
+            this.values[option.key] = bytes[option.offset] ? 1 : 0;
+        }
+        if (version === 3) {
+            this.values.fullSearchSeconds = bytes[9] | ((bytes[10] & 0x0F) << 8);
+            this.values.reducedSearchSeconds = (bytes[10] >> 4) | (bytes[11] << 4);
         }
         const o = DongleSettings.COMBO_MASK_OFFSET;
-        this.comboDisabledModes = v2 ? (bytes[o] | (bytes[o + 1] << 8) | (bytes[o + 2] << 16) | (bytes[o + 3] << 24)) >>> 0 : 0;
-        this.storedBytes = bytes.slice(0, v2 ? DongleSettings.LENGTH : DongleSettings.V1_LENGTH);
+        this.comboDisabledModes = version >= 2 ? (bytes[o] | (bytes[o + 1] << 8) | (bytes[o + 2] << 16) | (bytes[o + 3] << 24)) >>> 0 : 0;
+        this.storedBytes = bytes.slice(0, version >= 2 ? DongleSettings.LENGTH : DongleSettings.V1_LENGTH);
         return true;
     }
 
@@ -157,12 +176,18 @@ export class DongleSettings {
         const bytes = new Uint8Array(this.version === 1 ? DongleSettings.V1_LENGTH : DongleSettings.LENGTH);
         bytes[0] = this.version;
         for (const option of this.availableOptions()) {
-            if (option.number) {
-                const v = Math.round(Number(this.values[option.key]) || option.number.def);
-                bytes[option.offset] = Math.min(option.number.max, Math.max(option.number.min, v));
-            } else {
+            if (!option.search) {
                 bytes[option.offset] = this.values[option.key] ? 1 : 0;
             }
+        }
+        if (this.version === 3) {
+            const clamp = (v) => Math.min(DongleSettings.SEARCH_MAX_S, Math.max(0, Math.round(Number(v) || 0)));
+            const full = clamp(this.values.fullSearchSeconds);
+            const reduced = this.values.reducedSearchSeconds === DongleSettings.SEARCH_NO_LIMIT
+                ? DongleSettings.SEARCH_NO_LIMIT : clamp(this.values.reducedSearchSeconds);
+            bytes[9] = full & 0xFF;
+            bytes[10] = ((full >> 8) & 0x0F) | ((reduced & 0x0F) << 4);
+            bytes[11] = (reduced >> 4) & 0xFF;
         }
         this.#writeMask(bytes);
         return bytes;
