@@ -2,12 +2,13 @@ import { USBInterface } from "./usbInterface.js";
 import { Gamepad } from "../gamepad.js";
 import { UI } from "../uiSettings.js";
 import { UserSettings } from "../userSettings.js";
+import { UIDiagnostics } from "../uiDiagnostics.js";
 
 class USBManager {
     static #PACKET_LENGTH = Object.freeze(64);
     static #HEADER_LENGTH = Object.freeze(9);
     static #BAUDRATE = Object.freeze(9600); 
-    static #BUFFER_LEN = Object.freeze(1024);
+    static #BUFFER_LEN = Object.freeze(16384);  // diagnostics reports are up to ~14 KB
 
     static #PACKET_ID = Object.freeze({
         NONE: 0,
@@ -15,6 +16,7 @@ class USBManager {
         GET_PROFILE_BY_IDX: 0x55,
         SET_PROFILE_START: 0x60,
         SET_PROFILE: 0x61,
+        GET_DIAGNOSTICS: 0x74,
         SET_GP_IN: 0x80,
         SET_GP_OUT: 0x81,
         RESP_ERROR: 0xFF
@@ -34,8 +36,10 @@ class USBManager {
 
     #interface = null;
     #currentBufferInOffset = 0;
+    #expectedChunk = 0;
     #bufferIn = null;
     #userSettings = null;
+    #diagnosticsResolve = null;
 
     constructor() {
         this.#interface = new USBInterface();
@@ -51,7 +55,11 @@ class USBManager {
                     window.location.reload();
                 });
 
-                this.#interface.readTask(USBManager.#PACKET_LENGTH, this.#processPacketIn.bind(this));
+                const ids = new Set(Object.values(USBManager.#PACKET_ID));
+                // A packet starts with its length (64) and a known ID; chunk fields in range.
+                const isPacketStart = (b) => b[0] === USBManager.#PACKET_LENGTH && ids.has(b[1]) &&
+                    b[7] < Math.max(1, b[6]) && b[8] <= USBManager.#PACKET_LENGTH - USBManager.#HEADER_LENGTH;
+                this.#interface.readTask(USBManager.#PACKET_LENGTH, this.#processPacketIn.bind(this), isPacketStart);
                 await this.#sleep(1000);
                 return true;
             }
@@ -92,6 +100,23 @@ class USBManager {
             header, 
             new Uint8Array([0xFF])
         );
+    }
+
+    // Diagnostics report: the parsed JSON, or null after 3 s without an answer (older firmware
+    // ignores the request).
+    async getDiagnostics() {
+        const answer = new Promise((resolve) => {
+            this.#diagnosticsResolve = resolve;
+            setTimeout(() => {
+                if (this.#diagnosticsResolve === resolve) {
+                    this.#diagnosticsResolve = null;
+                    resolve(null);
+                }
+            }, 3000);
+        });
+        let header = this.#headerFromUi(USBManager.#PACKET_ID.GET_DIAGNOSTICS);
+        await this.#writeToDevice(header, new Uint8Array([0xFF]));
+        return answer;
     }
 
     async disconnect() {
@@ -161,6 +186,20 @@ class USBManager {
                 UI.drawGamepadInput(gamepad, this.#userSettings);
                 break;
 
+            case USBManager.#PACKET_ID.GET_DIAGNOSTICS: {
+                let report = null;
+                try {
+                    report = JSON.parse(new TextDecoder().decode(bufferIn.slice(0, dataLen)));
+                } catch (error) {
+                    console.warn("Diagnostics: bad JSON", error);
+                }
+                if (this.#diagnosticsResolve) {
+                    this.#diagnosticsResolve(report);
+                    this.#diagnosticsResolve = null;
+                }
+                break;
+            }
+
             default:
                 console.warn(`Unknown packet ID: ${header.packetId}`);
                 break;
@@ -173,6 +212,16 @@ class USBManager {
             return;
         }
         const header = this.#deserializeHeader(data);
+        // Messages are used only when every chunk arrived, in order (a resync may have cut one).
+        if (header.chunkIdx === 0) {
+            this.#currentBufferInOffset = 0;
+            this.#expectedChunk = 0;
+        }
+        if (header.chunkIdx !== this.#expectedChunk) {
+            this.#expectedChunk = -1;  // wait for the next message's first chunk
+            return;
+        }
+        this.#expectedChunk++;
 
         this.#bufferIn.set(
             data.subarray(
@@ -183,11 +232,14 @@ class USBManager {
 
         this.#currentBufferInOffset += header.chunkLen;
 
-        console.log("Received packet: " + (header.chunkIdx + 1) + " of " + header.chunksTotal);    
+        if (header.chunksTotal > 1) {  // not for every live input packet
+            console.log("Received packet: " + (header.chunkIdx + 1) + " of " + header.chunksTotal);
+        }
 
         if (header.chunkIdx + 1 === header.chunksTotal) {
             this.#processPacketInData(header, this.#bufferIn, this.#currentBufferInOffset);
             this.#currentBufferInOffset = 0;
+            this.#expectedChunk = 0;
         }
     }
 
@@ -258,6 +310,13 @@ export const USB = {
             UI.addCallbackSaveProfile(async () => {
                 await usbManager.saveProfile();
             }, userSettings);
+
+            UIDiagnostics.init(() => usbManager.getDiagnostics(), () => ({
+                connection: "USB",
+                device_mode: userSettings.deviceMode,
+                max_gamepads: userSettings.maxGamepads,
+            }));
+            UIDiagnostics.setAvailable(true);
 
             UI.addCallbackDisconnect(async () => {
                 await usbManager.disconnect();

@@ -18,7 +18,9 @@ export class USBInterface {
             this.port = await navigator.serial.requestPort({ filters });
         }
         
-        await this.port.open({ baudRate: baudrate });
+        // A larger read buffer than Web Serial's 255-byte default, so a fast stream (live input,
+        // a diagnostics report) does not overrun it while the page is busy.
+        await this.port.open({ baudRate: baudrate, bufferSize: 64 * 1024 });
         this.reader = this.port.readable.getReader();
         this.writer = this.port.writable.getWriter();
         return true;
@@ -36,7 +38,9 @@ export class USBInterface {
         return await this.writer.write(data);
     }
 
-    async readTask(length, processCallback) {
+    // isPacketStart(bytes), optional: whether a packet starts here. When it does not (the stream
+    // was joined in the middle of a packet), bytes are dropped until one does.
+    async readTask(length, processCallback, isPacketStart = null) {
         if (!this.reader) {
             console.warn("Reader not initialized.");
             return;
@@ -56,6 +60,14 @@ export class USBInterface {
                     inData = tempData;
 
                     while (inData.length >= length) {
+                        if (isPacketStart && !isPacketStart(inData)) {
+                            let next = 1;
+                            while (next + length <= inData.length && !isPacketStart(inData.subarray(next))) {
+                                next++;
+                            }
+                            inData = inData.slice(next);
+                            continue;
+                        }
                         processCallback(inData.slice(0, length));
                         inData = inData.slice(length);
                     }

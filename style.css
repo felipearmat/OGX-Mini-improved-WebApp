@@ -265,3 +265,35 @@ select:disabled {
     margin-top: 10px;
     margin-bottom: 15px;
 }
+
+/* Diagnostics panel (modules/uiDiagnostics.js). */
+.diagnosticsPanel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.diagnosticsPanel.hidden,
+.togglePanelControl.hidden {
+    display: none;
+}
+
+.diagnosticsControls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.diagTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+}
+
+.diagTable th,
+.diagTable td {
+    text-align: left;
+    padding: 4px 8px;
+    border-bottom: 1px solid rgba(127, 127, 127, 0.3);
+}
