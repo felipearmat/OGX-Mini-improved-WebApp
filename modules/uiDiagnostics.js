@@ -60,6 +60,12 @@ export const UIDiagnostics = {
         const info = document.getElementById("diagInfo");
         info.textContent = `${report.board} (${report.chip}), firmware ${report.firmware} (${report.build}), ` +
             `mode ${report.output_mode}, up ${Math.round(report.uptime_ms / 1000)} s, last reset: ${report.last_reset}`;
+        if (report.last_crash) {
+            const k = report.last_crash;
+            info.textContent += `. Last crash (${k.when}): ${k.kind}` +
+                (k.message ? ` "${k.message}"` : "") + (k.pc ? ` at ${k.pc}` : "") +
+                " - include the log report when asking for help";
+        }
         if (report.bluetooth && report.bluetooth.bredr_inquiry_running) {
             info.textContent += ". Searching for new Bluetooth controllers (slows down the connected ones)";
         }
