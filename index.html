@@ -290,6 +290,28 @@
                 </div>
             </div>
 
+            <div class="togglePanelControl hidden" id="searchControl">
+                <div class="header">
+                    <h3>Bluetooth search</h3>
+                </div>
+                <div class="buttonPanel">
+                    <button id="button-toggleSearch">Hide</button>
+                </div>
+            </div>
+
+            <div id="searchPanel" class="dongleOptionsPanel hidden">
+                <label>How long the adapter keeps searching for new Bluetooth controllers while a slot is
+                    open with a controller connected (a lone Joy-Con waiting for its other half, or free
+                    slots): first at full speed, then at about 10%, then not at all (the board LED blinks
+                    fast, slow, then stays on). Searching takes radio time from the connected controllers.
+                    With no controller connected the adapter always searches at full speed; a controller it
+                    already knows reconnects at once even when the search has stopped. Both 0 = no search
+                    once a controller is connected. Start + L3 on the controller (3 s) stops the current
+                    search; a controller going away starts it again.</label>
+                <div id="searchInput" class="dongleOptionsInput"></div>
+                <label id="searchStatus">Saved by itself, applied right away (no restart).</label>
+            </div>
+
             <div class="togglePanelControl hidden" id="diagnosticsControl">
                 <div class="header">
                     <h3>Diagnostics</h3>
@@ -328,7 +350,7 @@
                 <div id="dongleOptionsInput" class="dongleOptionsInput"></div>
                 <div class="dongleOptionsControls">
                     <button class="controlsButton" id="button-saveDongleOptions">Save Adapter Options</button>
-                    <label>Saving restarts the adapter, unless only the search times changed.</label>
+                    <label>Saving restarts the adapter.</label>
                 </div>
             </div>
 

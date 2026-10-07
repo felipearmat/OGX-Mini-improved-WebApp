@@ -26,19 +26,7 @@ export const UIDongle = {
             }
 
             let input;
-            if (option.number) {
-                input = document.createElement("input");
-                input.type = "number";
-                input.min = String(option.number.min);
-                input.max = String(option.number.max);
-                input.step = "1";
-                input.className = "dongleNumber";
-                input.addEventListener("change", () => {
-                    const v = Math.min(option.number.max, Math.max(option.number.min, Math.round(Number(input.value) || 0)));
-                    input.value = String(v);
-                    dongleSettings.values[option.key] = v;
-                });
-            } else if (option.choices) {
+            if (option.choices) {
                 input = document.createElement("select");
                 for (const choice of option.choices) {
                     const element = document.createElement("option");
@@ -61,22 +49,6 @@ export const UIDongle = {
 
             row.appendChild(label);
             row.appendChild(input);
-            if (option.noLimit) {
-                const box = document.createElement("input");
-                box.type = "checkbox";
-                box.id = `${id}-noLimit`;
-                const boxLabel = document.createElement("label");
-                boxLabel.htmlFor = box.id;
-                boxLabel.textContent = "No limit";
-                box.addEventListener("change", () => {
-                    input.disabled = box.checked;
-                    dongleSettings.values[option.key] = box.checked
-                        ? DongleSettings.SEARCH_NO_LIMIT
-                        : Math.min(option.number.max, Math.max(option.number.min, Math.round(Number(input.value) || 0)));
-                });
-                row.appendChild(box);
-                row.appendChild(boxLabel);
-            }
             if (option.help) {
                 const help = document.createElement("div");
                 help.className = "dongleOptionHelp";
@@ -109,15 +81,7 @@ export const UIDongle = {
             if (row) {
                 row.classList.toggle("hidden", !known);
             }
-            if (option.noLimit) {
-                const box = document.getElementById(`dongle-${option.key}-noLimit`);
-                const unlimited = dongleSettings.values[option.key] === DongleSettings.SEARCH_NO_LIMIT;
-                if (box) {
-                    box.checked = unlimited;
-                }
-                input.disabled = unlimited;
-                input.value = String(unlimited ? option.number.def : dongleSettings.values[option.key]);
-            } else if (option.choices || option.number) {
+            if (option.choices) {
                 input.value = String(dongleSettings.values[option.key]);
             } else {
                 input.checked = dongleSettings.values[option.key] !== 0;
@@ -137,7 +101,40 @@ export const UIDongle = {
 
     /*  The checkbox under the Device Mode dropdown: whether the button combo may switch to the
      *  selected mode. Saved right away (saveFunc(bytes)); Web App mode always keeps its combo. */
+    /*  Live settings (mode combos, Bluetooth search times): the adapter applies them without a
+     *  restart, so they are saved by themselves, once the changes stop for a moment. */
+    liveSave: null,
+    liveTimer: null,
+    liveDone: [],
+
+    setLiveSave(dongleSettings, saveFunc) {
+        this.liveSave = async () => {
+            const bytes = dongleSettings.liveBytes();
+            await saveFunc(bytes);
+            dongleSettings.storedBytes = bytes;
+        };
+    },
+
+    scheduleLiveSave(onSaved) {
+        if (!this.liveSave) {
+            return;
+        }
+        if (onSaved) {
+            this.liveDone.push(onSaved);
+        }
+        clearTimeout(this.liveTimer);
+        this.liveTimer = setTimeout(async () => {
+            const done = this.liveDone;
+            this.liveDone = [];
+            await this.liveSave();
+            for (const fn of done) {
+                fn();
+            }
+        }, 700);
+    },
+
     initModeCombo(dongleSettings, saveFunc) {
+        this.setLiveSave(dongleSettings, saveFunc);
         const row = document.getElementById("modeComboRow");
         const box = document.getElementById("checkbox-modeCombo");
         const label = document.getElementById("label-modeCombo");
@@ -162,13 +159,17 @@ export const UIDongle = {
             }
         };
         ModeView.addListener(show);  // dropdown changed by the user or by a profile read
-        box.addEventListener("change", async () => {
+        box.addEventListener("change", () => {
             dongleSettings.setComboEnabled(Number(dropdown.value), box.checked);
-            await saveFunc(dongleSettings.comboBytes());
-            dongleSettings.storedBytes = dongleSettings.comboBytes();
+            const base = hint ? hint.textContent.replace(/ - (saving\.\.\.|saved .*)$/, "") : "";
             if (hint) {
-                hint.textContent += ` - saved (${new Date().toLocaleTimeString()})`;
+                hint.textContent = `${base} - saving...`;
             }
+            this.scheduleLiveSave(() => {
+                if (hint) {
+                    hint.textContent = `${base} - saved (${new Date().toLocaleTimeString()})`;
+                }
+            });
         });
         this.refreshModeCombo = show;
         show();

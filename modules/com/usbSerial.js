@@ -8,6 +8,7 @@ import { KbmSettings } from "../kbmSettings.js";
 import { UIKbm } from "../uiKbm.js";
 import { UIRumble } from "../uiRumble.js";
 import { UITouchpad } from "../uiTouchpad.js";
+import { UISearch } from "../uiSearch.js";
 import { UIDiagnostics } from "../uiDiagnostics.js";
 
 class USBManager {
@@ -232,6 +233,7 @@ class USBManager {
                     if (UIDongle.refreshModeCombo) {
                         UIDongle.refreshModeCombo();
                     }
+                    UISearch.update(this.#dongleSettings);
                     UIRumble.setAvailable(true);  // same firmware generation
                 }
                 break;
@@ -348,6 +350,7 @@ export const USB = {
         UI.init(userSettings);
         const dongleSettings = new DongleSettings();
         UIDongle.init(dongleSettings);
+        UISearch.init(dongleSettings);
         const kbmSettings = new KbmSettings();
         UIKbm.init(kbmSettings);
         const usbManager = new USBManager();

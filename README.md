@@ -17,12 +17,14 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
   - Use a MAC address per controller (PS4 / STEAM modes)
   - Legacy PS4 motion scale (Brook auth adapters)
   - Joy-Con pair rumble: per side (as SDL / Steam) or both Joy-Cons
-  - Search for new controllers once one is connected, while a slot is open (a lone Joy-Con,
-    free slots): full search (0-600 s, default 60), then reduced search at about 10% (0-600 s or
-    no limit, the default); both 0 = no search with a controller connected. No restart needed.
-    Firmware from before these settings shows its *Single controller* option instead.
+  - Single controller (firmware from before the Bluetooth search times only)
 
   The panel appears only when the adapter's firmware supports it.
+- **Bluetooth search** (its own section, before Diagnostics): how long the adapter keeps
+  searching for new controllers once one is connected, while a slot is open (a lone Joy-Con,
+  free slots) — full search (0-600 s, default 60), then reduced search at about 10% (0-600 s or
+  no limit, the default); both 0 = no search with a controller connected. Saved by itself a
+  moment after the last change and applied without a restart, like *Mode Enabled*.
 - **Mouse + Keyboard Mode**: what each controller input sends in the firmware's mouse + keyboard
   output mode — any key (with Ctrl / Shift / Alt / Win held), a mouse button or a media key; each
   stick as pointer, scroll, arrow keys or WASD; pointer / scroll speed, deadzone, acceleration,
@@ -31,8 +33,9 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
   adapter to that mode, as for any mode), *Reload Profile* reads it back and *Load Defaults* goes
   back to the firmware's layout.
 - **Mode combos on / off**: *Mode Enabled* under the Device Mode dropdown turns the selected
-  mode's button combo on or off (saved right away, no restart; the combo itself is shown below
-  it), so a game's button chords cannot switch the adapter by accident. The Web App mode combo is always on. Stored in the Adapter Options
+  mode's button combo on or off (saved by itself a moment after the last change, no restart; the
+  combo itself is shown below it), so a game's button chords cannot switch the adapter by
+  accident. The Web App mode combo is always on. Stored in the Adapter Options
   record, bytes 12-15 (bit mask by mode).
 - **Touchpad** (USB; PS4, STEAM, Mouse + Keyboard and Web App modes; first section of the
   page): the DS4 / DualSense touchpad as the adapter reads it, a green ball per finger, and the

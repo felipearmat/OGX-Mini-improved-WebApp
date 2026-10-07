@@ -65,17 +65,6 @@ export class DongleSettings {
             choices: [{ label: "Per side (as SDL / Steam)", value: 1 }, { label: "Both Joy-Cons", value: 0 }],
             help: "Per side: the game's left (strong) motor rumbles the left Joy-Con and the right (weak) motor the right one, as when the pair is connected straight to a PC. Both: each Joy-Con plays both motors.",
         },
-        {
-            key: "fullSearchSeconds", search: "full", since: 3, number: { min: 0, max: 600, def: 60 },
-            label: "Full search for new controllers (seconds)",
-            help: "While a slot is open with a controller connected (a lone Joy-Con waiting for its other half, or free slots), the adapter first searches at full speed for this long. Searching takes radio time from the connected controllers. With no controller connected it always searches at full speed. Applied without a restart.",
-        },
-        {
-            key: "reducedSearchSeconds", search: "reduced", since: 3, number: { min: 0, max: 600, def: 600 },
-            noLimit: true,
-            label: "Then reduced search (seconds)",
-            help: "After the full search, the adapter keeps searching at about 10% for this long (or with no limit), then stops; the board LED stays on. New controllers still pair during the reduced search, just slower (up to about 40 s); known controllers reconnect at once even when the search has stopped. Both times 0 = no search once a controller is connected. Start + L3 on the controller (3 s) stops the current search; a controller going away starts it again. Applied without a restart.",
-        },
     ]);
 
     static COMBO_MASK_OFFSET = Object.freeze(12);
@@ -103,8 +92,10 @@ export class DongleSettings {
         this.comboDisabledModes = 0;
         this.storedBytes = null;  // as last read from the adapter
         for (const option of DongleSettings.OPTIONS) {
-            this.values[option.key] = option.number ? option.number.def : 0;
+            this.values[option.key] = 0;
         }
+        // Bluetooth search panel (version 3), saved live like the mode combos.
+        this.values.fullSearchSeconds = 60;
         this.values.reducedSearchSeconds = DongleSettings.SEARCH_NO_LIMIT;
     }
 
@@ -126,9 +117,6 @@ export class DongleSettings {
         }
         this.version = version;
         for (const option of this.availableOptions()) {
-            if (option.search) {
-                continue;
-            }
             this.values[option.key] = bytes[option.offset] ? 1 : 0;
         }
         if (version === 3) {
@@ -154,12 +142,26 @@ export class DongleSettings {
         this.comboDisabledModes = (enabled ? (this.comboDisabledModes & ~bit) : (this.comboDisabledModes | bit)) >>> 0;
     }
 
-    // The settings as stored on the adapter with only the combo mask changed (no restart, and
-    // unsaved edits in the Adapter Options panel are left out).
-    comboBytes() {
+    // The settings as stored on the adapter with only the live ones changed — mode combos and
+    // search times, which the adapter applies without a restart. Unsaved edits in the Adapter
+    // Options panel are left out.
+    liveBytes() {
         const bytes = new Uint8Array(this.storedBytes || this.getBytes());
         this.#writeMask(bytes);
+        if (this.version === 3) {
+            this.#writeSearchTimes(bytes);
+        }
         return bytes;
+    }
+
+    #writeSearchTimes(bytes) {
+        const clamp = (v) => Math.min(DongleSettings.SEARCH_MAX_S, Math.max(0, Math.round(Number(v) || 0)));
+        const full = clamp(this.values.fullSearchSeconds);
+        const reduced = this.values.reducedSearchSeconds === DongleSettings.SEARCH_NO_LIMIT
+            ? DongleSettings.SEARCH_NO_LIMIT : clamp(this.values.reducedSearchSeconds);
+        bytes[9] = full & 0xFF;
+        bytes[10] = ((full >> 8) & 0x0F) | ((reduced & 0x0F) << 4);
+        bytes[11] = (reduced >> 4) & 0xFF;
     }
 
     #writeMask(bytes) {
@@ -176,18 +178,10 @@ export class DongleSettings {
         const bytes = new Uint8Array(this.version === 1 ? DongleSettings.V1_LENGTH : DongleSettings.LENGTH);
         bytes[0] = this.version;
         for (const option of this.availableOptions()) {
-            if (!option.search) {
-                bytes[option.offset] = this.values[option.key] ? 1 : 0;
-            }
+            bytes[option.offset] = this.values[option.key] ? 1 : 0;
         }
         if (this.version === 3) {
-            const clamp = (v) => Math.min(DongleSettings.SEARCH_MAX_S, Math.max(0, Math.round(Number(v) || 0)));
-            const full = clamp(this.values.fullSearchSeconds);
-            const reduced = this.values.reducedSearchSeconds === DongleSettings.SEARCH_NO_LIMIT
-                ? DongleSettings.SEARCH_NO_LIMIT : clamp(this.values.reducedSearchSeconds);
-            bytes[9] = full & 0xFF;
-            bytes[10] = ((full >> 8) & 0x0F) | ((reduced & 0x0F) << 4);
-            bytes[11] = (reduced >> 4) & 0xFF;
+            this.#writeSearchTimes(bytes);
         }
         this.#writeMask(bytes);
         return bytes;
