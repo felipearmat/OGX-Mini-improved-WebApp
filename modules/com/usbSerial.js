@@ -49,6 +49,7 @@ class USBManager {
 
     #interface = null;
     #currentBufferInOffset = 0;
+    #expectedChunk = 0;
     #bufferIn = null;
     #userSettings = null;
     #dongleSettings = null;
@@ -71,7 +72,11 @@ class USBManager {
                     window.location.reload();
                 });
 
-                this.#interface.readTask(USBManager.#PACKET_LENGTH, this.#processPacketIn.bind(this));
+                const ids = new Set(Object.values(USBManager.#PACKET_ID));
+                // A packet starts with its length (64) and a known ID; chunk fields in range.
+                const isPacketStart = (b) => b[0] === USBManager.#PACKET_LENGTH && ids.has(b[1]) &&
+                    b[7] < Math.max(1, b[6]) && b[8] <= USBManager.#PACKET_LENGTH - USBManager.#HEADER_LENGTH;
+                this.#interface.readTask(USBManager.#PACKET_LENGTH, this.#processPacketIn.bind(this), isPacketStart);
                 await this.#sleep(1000);
                 return true;
             }
@@ -287,6 +292,16 @@ class USBManager {
             return;
         }
         const header = this.#deserializeHeader(data);
+        // Messages are used only when every chunk arrived, in order (a resync may have cut one).
+        if (header.chunkIdx === 0) {
+            this.#currentBufferInOffset = 0;
+            this.#expectedChunk = 0;
+        }
+        if (header.chunkIdx !== this.#expectedChunk) {
+            this.#expectedChunk = -1;  // wait for the next message's first chunk
+            return;
+        }
+        this.#expectedChunk++;
 
         this.#bufferIn.set(
             data.subarray(
@@ -297,11 +312,18 @@ class USBManager {
 
         this.#currentBufferInOffset += header.chunkLen;
 
-        console.log("Received packet: " + (header.chunkIdx + 1) + " of " + header.chunksTotal);    
+        if (header.chunksTotal > 1) {  // not for every live input packet (hundreds per second)
+            console.log("Received packet: " + (header.chunkIdx + 1) + " of " + header.chunksTotal);
+        }
 
         if (header.chunkIdx + 1 === header.chunksTotal) {
-            this.#processPacketInData(header, this.#bufferIn, this.#currentBufferInOffset);
+            try {
+                this.#processPacketInData(header, this.#bufferIn, this.#currentBufferInOffset);
+            } catch (error) {
+                console.warn("Dropped a bad message:", error);  // never ends the connection
+            }
             this.#currentBufferInOffset = 0;
+            this.#expectedChunk = 0;
         }
     }
 
