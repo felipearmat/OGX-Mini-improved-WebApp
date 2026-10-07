@@ -300,14 +300,13 @@
             </div>
 
             <div id="searchPanel" class="dongleOptionsPanel hidden">
-                <label>How long the adapter keeps searching for new Bluetooth controllers while a slot is
-                    open with a controller connected (a lone Joy-Con waiting for its other half, or free
-                    slots): first at full speed, then at about 10%, then not at all (the board LED blinks
-                    fast, slow, then stays on). Searching takes radio time from the connected controllers.
-                    With no controller connected the adapter always searches at full speed; a controller it
-                    already knows reconnects at once even when the search has stopped. Both 0 = no search
-                    once a controller is connected. Start + L3 on the controller (3 s) stops the current
-                    search; a controller going away starts it again.</label>
+                <label>While a controller is connected and a slot is still open (a lone Joy-Con waiting for
+                    its other half, or free slots), the adapter keeps searching for new controllers: at
+                    full speed first, then at about 10% (LED: fast blink, slow blink, then on = stopped).
+                    The full-speed search can add input lag to the connected controllers. Both 0 = no
+                    search once a controller is connected. With none connected it always searches at full
+                    speed, and known controllers reconnect even when the search has stopped.
+                    Start + L3 (3 s) stops the current search; a controller going away restarts it.</label>
                 <div id="searchInput" class="dongleOptionsInput"></div>
                 <label id="searchStatus">Saved by itself, applied right away (no restart).</label>
             </div>

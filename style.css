@@ -394,3 +394,12 @@ select:disabled {
 .dongleNumber {
     width: 5em;
 }
+
+/* Bluetooth search panel: "No limit" right after the reduced search label. */
+.searchNoLimit {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0 8px;
+    white-space: nowrap;
+}

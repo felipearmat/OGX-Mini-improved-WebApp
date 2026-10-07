@@ -22,16 +22,23 @@ export const UISearch = {
 
         const fullRow = this._numberRow("search-full", "Full search (seconds)");
         const full = fullRow.querySelector("input");
-        const reducedRow = this._numberRow("search-reduced", "Then reduced search (seconds)");
+        const reducedRow = this._numberRow("search-reduced", "Reduced search (seconds)");
         const reduced = reducedRow.querySelector("input");
+        // "No limit" right next to the label, before the number.
+        const noLimitWrap = document.createElement("span");
+        noLimitWrap.className = "searchNoLimit";
         const noLimit = document.createElement("input");
         noLimit.type = "checkbox";
         noLimit.id = "search-reduced-noLimit";
         const noLimitLabel = document.createElement("label");
         noLimitLabel.htmlFor = noLimit.id;
         noLimitLabel.textContent = "No limit";
-        reducedRow.appendChild(noLimit);
-        reducedRow.appendChild(noLimitLabel);
+        noLimitWrap.appendChild(noLimit);
+        noLimitWrap.appendChild(noLimitLabel);
+        const labelCell = document.createElement("span");  // first grid column: label + No limit
+        labelCell.appendChild(reducedRow.querySelector("label"));
+        labelCell.appendChild(noLimitWrap);
+        reducedRow.insertBefore(labelCell, reduced);
         container.appendChild(fullRow);
         container.appendChild(reducedRow);
 
