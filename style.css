@@ -403,3 +403,19 @@ select:disabled {
     margin: 0 8px;
     white-space: nowrap;
 }
+
+/* Shown when the adapter does not answer with its dongle settings (older firmware). */
+.firmwareWarning {
+    margin: 8px 0 12px;
+    padding: 10px 14px;
+    border: 1px solid #e0b100;
+    border-radius: 6px;
+    background-color: #fff6d6;
+    color: #4a3b00;
+    font-size: 0.9em;
+}
+
+.firmwareWarning ul {
+    margin: 6px 0;
+    padding-left: 20px;
+}

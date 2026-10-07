@@ -5,6 +5,7 @@ import { Gamepad } from "../gamepad.js";
 import { Mutex } from "../mutex.js";
 import { DongleSettings } from "../dongleSettings.js";
 import { UISearch } from "../uiSearch.js";
+import { ModeView } from "../modeView.js";
 import { UIDongle } from "../uiDongle.js";
 import { KbmSettings } from "../kbmSettings.js";
 import { UIKbm } from "../uiKbm.js";
@@ -369,6 +370,8 @@ export const BT = {
             if (await btManager.getDongleSettings(dongleSettings)) {
                 UIDongle.update(dongleSettings);
                 UIDongle.setAvailable(true);
+            } else {
+                ModeView.setFirmwareWarning(true);  // older firmware: warn what will not work as expected
             }
             if (await btManager.getKbmSettings(kbmSettings)) {
                 UIKbm.update(kbmSettings);

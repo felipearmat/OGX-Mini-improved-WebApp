@@ -40,6 +40,14 @@ export const ModeView = {
         this.apply();
     },
 
+    // Older firmware (no dongle settings answer): warn at the top of the settings.
+    setFirmwareWarning(show) {
+        const warning = document.getElementById("firmwareWarning");
+        if (warning) {
+            warning.classList.toggle("hidden", !show);
+        }
+    },
+
     setKbmAvailable(available) {
         this.kbmAvailable = available;
         this.apply();

@@ -3,6 +3,7 @@ import { Gamepad } from "../gamepad.js";
 import { UI } from "../uiSettings.js";
 import { UserSettings } from "../userSettings.js";
 import { DongleSettings } from "../dongleSettings.js";
+import { ModeView } from "../modeView.js";
 import { UIDongle } from "../uiDongle.js";
 import { KbmSettings } from "../kbmSettings.js";
 import { UIKbm } from "../uiKbm.js";
@@ -364,6 +365,8 @@ export const USB = {
 
             await usbManager.getProfileByIdx();
             await usbManager.getDongleSettings();
+            // No answer (older firmware) within 1.5 s: warn what will not work as expected.
+            setTimeout(() => ModeView.setFirmwareWarning(!dongleSettings.storedBytes), 1500);
             await usbManager.getKbmSettings();
 
             UI.updateAll(userSettings);

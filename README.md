@@ -64,6 +64,9 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
 
 Everything else (profiles, stick and trigger settings, button mappings) works as in the
 original web app, with original OGX-Mini firmware too.
+With firmware that does not answer with its dongle settings (it predates these features), a
+warning at the top of the settings lists what will not work as expected and advises updating the
+adapter's firmware.
 
 ## Run it locally
 
