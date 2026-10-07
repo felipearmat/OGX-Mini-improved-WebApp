@@ -18,6 +18,8 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
   - Legacy PS4 motion scale (Brook auth adapters)
   - Single controller (a lone Joy-Con does not wait for its other half)
   - Joy-Con pair rumble: per side (as SDL / Steam) or both Joy-Cons
+  - Full search for new controllers (seconds, default 60): how long an open slot (a lone
+    Joy-Con, free slots) keeps the full search before it drops to about 10%; no restart needed
 
   The panel appears only when the adapter's firmware supports it.
 - **Mouse + Keyboard Mode**: what each controller input sends in the firmware's mouse + keyboard

@@ -59,6 +59,11 @@ export class DongleSettings {
             choices: [{ label: "Per side (as SDL / Steam)", value: 1 }, { label: "Both Joy-Cons", value: 0 }],
             help: "Per side: the game's left (strong) motor rumbles the left Joy-Con and the right (weak) motor the right one, as when the pair is connected straight to a PC. Both: each Joy-Con plays both motors.",
         },
+        {
+            key: "fullSearchSeconds", offset: 9, since: 2, number: { min: 1, max: 255, def: 60 },
+            label: "Full search for new controllers (seconds)",
+            help: "While a slot is open with a controller connected (a lone Joy-Con waiting for its other half, or free slots), the adapter searches at full speed for this long, then at about 10% so the connected controllers keep the radio. New controllers still pair during the reduced search, just slower (up to about 40 s); known ones reconnect at once. Applied without a restart.",
+        },
     ]);
 
     static COMBO_MASK_OFFSET = Object.freeze(12);
@@ -86,7 +91,7 @@ export class DongleSettings {
         this.comboDisabledModes = 0;
         this.storedBytes = null;  // as last read from the adapter
         for (const option of DongleSettings.OPTIONS) {
-            this.values[option.key] = 0;
+            this.values[option.key] = option.number ? option.number.def : 0;
         }
     }
 
@@ -107,7 +112,9 @@ export class DongleSettings {
         }
         this.version = v2 ? DongleSettings.VERSION : 1;
         for (const option of this.availableOptions()) {
-            this.values[option.key] = bytes[option.offset] ? 1 : 0;
+            this.values[option.key] = option.number
+                ? (bytes[option.offset] || option.number.def)  // 0 = the firmware default
+                : (bytes[option.offset] ? 1 : 0);
         }
         const o = DongleSettings.COMBO_MASK_OFFSET;
         this.comboDisabledModes = v2 ? (bytes[o] | (bytes[o + 1] << 8) | (bytes[o + 2] << 16) | (bytes[o + 3] << 24)) >>> 0 : 0;
@@ -150,7 +157,12 @@ export class DongleSettings {
         const bytes = new Uint8Array(this.version === 1 ? DongleSettings.V1_LENGTH : DongleSettings.LENGTH);
         bytes[0] = this.version;
         for (const option of this.availableOptions()) {
-            bytes[option.offset] = this.values[option.key] ? 1 : 0;
+            if (option.number) {
+                const v = Math.round(Number(this.values[option.key]) || option.number.def);
+                bytes[option.offset] = Math.min(option.number.max, Math.max(option.number.min, v));
+            } else {
+                bytes[option.offset] = this.values[option.key] ? 1 : 0;
+            }
         }
         this.#writeMask(bytes);
         return bytes;

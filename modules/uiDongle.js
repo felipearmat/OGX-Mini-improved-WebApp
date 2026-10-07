@@ -26,7 +26,19 @@ export const UIDongle = {
             }
 
             let input;
-            if (option.choices) {
+            if (option.number) {
+                input = document.createElement("input");
+                input.type = "number";
+                input.min = String(option.number.min);
+                input.max = String(option.number.max);
+                input.step = "1";
+                input.className = "dongleNumber";
+                input.addEventListener("change", () => {
+                    const v = Math.min(option.number.max, Math.max(option.number.min, Math.round(Number(input.value) || option.number.def)));
+                    input.value = String(v);
+                    dongleSettings.values[option.key] = v;
+                });
+            } else if (option.choices) {
                 input = document.createElement("select");
                 for (const choice of option.choices) {
                     const element = document.createElement("option");
@@ -81,7 +93,7 @@ export const UIDongle = {
             if (row) {
                 row.classList.toggle("hidden", !known);
             }
-            if (option.choices) {
+            if (option.choices || option.number) {
                 input.value = String(dongleSettings.values[option.key]);
             } else {
                 input.checked = dongleSettings.values[option.key] !== 0;
