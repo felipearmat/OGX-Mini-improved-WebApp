@@ -105,6 +105,11 @@ export const UIDiagnostics = {
             if (c.channels_total) {
                 signal += `, ${c.channels_in_use}/${c.channels_total} channels`;
             }
+            if (c.tx_power_dbm !== undefined) {
+                // The adapter's own transmit power on this link (and the most it may use).
+                signal += `, adapter TX ${c.tx_power_dbm}` +
+                    (c.tx_power_max_dbm !== undefined ? `/${c.tx_power_max_dbm}` : "") + " dBm";
+            }
             addRow([
                 `${c.name} (${c.vid}:${c.pid})${details ? ` - ${details}` : ""}`,
                 link,

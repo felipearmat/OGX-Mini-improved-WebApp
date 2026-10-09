@@ -305,7 +305,7 @@
 
             <div class="togglePanelControl hidden" id="searchControl">
                 <div class="header">
-                    <h3>Bluetooth search</h3>
+                    <h3>Bluetooth search and idle</h3>
                 </div>
                 <div class="buttonPanel">
                     <button id="button-toggleSearch">Hide</button>
@@ -319,7 +319,9 @@
                     The full-speed search can add input lag to the connected controllers. Both 0 = no
                     search once a controller is connected. With none connected it always searches at full
                     speed, and known controllers reconnect even when the search has stopped.
-                    Start + L3 (3 s) stops the current search; a controller going away restarts it.</label>
+                    Start + L3 (3 s) stops the current search; a controller going away restarts it.
+                    A Bluetooth controller left on without input is turned off after the idle time, to
+                    save its battery (a Joy-Con pair counts as one controller).</label>
                 <div id="searchInput" class="dongleOptionsInput"></div>
                 <label id="searchStatus">Saved by itself, applied right away (no restart).</label>
             </div>

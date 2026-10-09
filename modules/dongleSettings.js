@@ -1,9 +1,9 @@
 /*  Dongle-wide options (OGX-Mini-improved firmware).
  *
- *  Wire format, shared with the firmware (Custom/DongleSettings.h): 16 bytes, a version byte
- *  (3) then one byte per option (0 / 1). Older firmware answers with version 2 (16 bytes, with
- *  the single controller option in byte 7) or 1 (the first 8 bytes); the page then shows only
- *  the options that version has and saves in that format. USB: packets GET_DONGLE_SETTINGS
+ *  Wire format, shared with the firmware (UserSettings/DongleSettings.h): 17 bytes, a version
+ *  byte (4) then one byte per option (0 / 1). Older firmware answers with version 3 or 2 (16
+ *  bytes; version 2 has the single controller option in byte 7) or 1 (the first 8 bytes); the
+ *  page then shows only the options that version has and saves in that format. USB: packets GET_DONGLE_SETTINGS
  *  (0x70) and SET_DONGLE_SETTINGS (0x71). Bluetooth: characteristic ...9060 (read / write).
  *  Saving stores the options and restarts the adapter, unless only the live ones changed.
  *
@@ -13,12 +13,17 @@
  *  Bytes 12-15 (version 2): output modes whose button combo is off, a little-endian bit mask
  *  (bit n = device mode n); zero turns every combo on. Web App mode (100) is always on. Saving a
  *  change of the mask alone applies it right away, without a restart.
+ *  Version 4, byte 16: minutes without input before a Bluetooth controller is turned off
+ *  (0 = never). Applied without a restart.
  */
 export class DongleSettings {
-    static VERSION = Object.freeze(3);
+    static VERSION = Object.freeze(4);
     static SEARCH_MAX_S = Object.freeze(600);
     static SEARCH_NO_LIMIT = Object.freeze(0xFFF);
-    static LENGTH = Object.freeze(16);
+    static LENGTH = Object.freeze(17);
+    static V3_LENGTH = Object.freeze(16);
+    static IDLE_OFFSET = Object.freeze(16);
+    static IDLE_MAX_MIN = Object.freeze(255);
     static V1_LENGTH = Object.freeze(8);
 
     // Byte offsets follow the firmware struct. "choices" options are shown as a dropdown,
@@ -97,6 +102,13 @@ export class DongleSettings {
         // Bluetooth search panel (version 3), saved live like the mode combos.
         this.values.fullSearchSeconds = 60;
         this.values.reducedSearchSeconds = DongleSettings.SEARCH_NO_LIMIT;
+        // Version 4: idle turn-off, saved live too.
+        this.values.idleOffMinutes = 15;
+    }
+
+    // Record length of a version.
+    static lengthOf(version) {
+        return version >= 4 ? DongleSettings.LENGTH : version >= 2 ? DongleSettings.V3_LENGTH : DongleSettings.V1_LENGTH;
     }
 
     // Options the connected firmware knows (it answered in this.version).
@@ -110,22 +122,24 @@ export class DongleSettings {
         if (!(bytes instanceof Uint8Array)) {
             return false;
         }
-        const full = bytes.length >= DongleSettings.LENGTH;
         const version = bytes[0];
-        if (!((version === 3 || version === 2) && full) && !(version === 1 && bytes.length >= DongleSettings.V1_LENGTH)) {
+        if (version < 1 || version > DongleSettings.VERSION || bytes.length < DongleSettings.lengthOf(version)) {
             return false;
         }
         this.version = version;
         for (const option of this.availableOptions()) {
             this.values[option.key] = bytes[option.offset] ? 1 : 0;
         }
-        if (version === 3) {
+        if (version >= 3) {
             this.values.fullSearchSeconds = bytes[9] | ((bytes[10] & 0x0F) << 8);
             this.values.reducedSearchSeconds = (bytes[10] >> 4) | (bytes[11] << 4);
         }
+        if (version >= 4) {
+            this.values.idleOffMinutes = bytes[DongleSettings.IDLE_OFFSET];
+        }
         const o = DongleSettings.COMBO_MASK_OFFSET;
         this.comboDisabledModes = version >= 2 ? (bytes[o] | (bytes[o + 1] << 8) | (bytes[o + 2] << 16) | (bytes[o + 3] << 24)) >>> 0 : 0;
-        this.storedBytes = bytes.slice(0, version >= 2 ? DongleSettings.LENGTH : DongleSettings.V1_LENGTH);
+        this.storedBytes = bytes.slice(0, DongleSettings.lengthOf(version));
         return true;
     }
 
@@ -148,10 +162,18 @@ export class DongleSettings {
     liveBytes() {
         const bytes = new Uint8Array(this.storedBytes || this.getBytes());
         this.#writeMask(bytes);
-        if (this.version === 3) {
+        if (this.version >= 3) {
             this.#writeSearchTimes(bytes);
         }
+        this.#writeIdle(bytes);
         return bytes;
+    }
+
+    #writeIdle(bytes) {
+        if (this.version >= 4 && bytes.length > DongleSettings.IDLE_OFFSET) {
+            const v = Math.round(Number(this.values.idleOffMinutes) || 0);
+            bytes[DongleSettings.IDLE_OFFSET] = Math.min(DongleSettings.IDLE_MAX_MIN, Math.max(0, v));
+        }
     }
 
     #writeSearchTimes(bytes) {
@@ -175,15 +197,16 @@ export class DongleSettings {
 
     getBytes() {
         // Same format the firmware answered with, so older firmware still accepts it.
-        const bytes = new Uint8Array(this.version === 1 ? DongleSettings.V1_LENGTH : DongleSettings.LENGTH);
+        const bytes = new Uint8Array(DongleSettings.lengthOf(this.version));
         bytes[0] = this.version;
         for (const option of this.availableOptions()) {
             bytes[option.offset] = this.values[option.key] ? 1 : 0;
         }
-        if (this.version === 3) {
+        if (this.version >= 3) {
             this.#writeSearchTimes(bytes);
         }
         this.#writeMask(bytes);
+        this.#writeIdle(bytes);
         return bytes;
     }
 }

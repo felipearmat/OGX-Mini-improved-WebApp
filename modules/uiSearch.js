@@ -6,7 +6,8 @@ import { UIDongle } from "./uiDongle.js";
  *  (a lone Joy-Con waiting for its other half, or free slots) — first at full speed, then at
  *  about 10%. The adapter applies these without a restart, so they are saved by themselves a
  *  moment after the last change (like Mode Enabled). Hidden until the adapter answers with a
- *  version 3 record. */
+ *  version 3 record. Version 4 adds the idle turn-off time of the controllers (minutes without
+ *  input, 0 = never), saved the same way. */
 export const UISearch = {
     built: false,
 
@@ -41,13 +42,19 @@ export const UISearch = {
         reducedRow.insertBefore(labelCell, reduced);
         container.appendChild(fullRow);
         container.appendChild(reducedRow);
+        const idleRow = this._numberRow("idle-off", "Turn controllers off after (minutes without input, 0 = never)",
+            DongleSettings.IDLE_MAX_MIN);
+        idleRow.id = "idleOffRow";
+        const idle = idleRow.querySelector("input");
+        container.appendChild(idleRow);
 
-        const clamp = (input) => {
-            const v = Math.min(max, Math.max(0, Math.round(Number(input.value) || 0)));
+        const clamp = (input, limit = max) => {
+            const v = Math.min(limit, Math.max(0, Math.round(Number(input.value) || 0)));
             input.value = String(v);
             return v;
         };
         const changed = () => {
+            dongleSettings.values.idleOffMinutes = clamp(idle, DongleSettings.IDLE_MAX_MIN);
             dongleSettings.values.fullSearchSeconds = clamp(full);
             reduced.disabled = noLimit.checked;
             dongleSettings.values.reducedSearchSeconds = noLimit.checked
@@ -59,6 +66,7 @@ export const UISearch = {
         };
         full.addEventListener("input", changed);
         reduced.addEventListener("input", changed);
+        idle.addEventListener("input", changed);
         noLimit.addEventListener("change", changed);
 
         const toggle = document.getElementById("button-toggleSearch");
@@ -98,6 +106,12 @@ export const UISearch = {
             reduced.disabled = unlimited;
             reduced.value = String(unlimited ? DongleSettings.SEARCH_MAX_S : dongleSettings.values.reducedSearchSeconds);
         }
+        const idleRow = document.getElementById("idleOffRow");
+        const idle = document.getElementById("idle-off");
+        if (idleRow && idle) {
+            idleRow.classList.toggle("hidden", dongleSettings.version < 4);
+            idle.value = String(dongleSettings.values.idleOffMinutes);
+        }
     },
 
     setStatus(text) {
@@ -107,7 +121,7 @@ export const UISearch = {
         }
     },
 
-    _numberRow(id, text) {
+    _numberRow(id, text, maxValue = DongleSettings.SEARCH_MAX_S) {
         const row = document.createElement("div");
         row.className = "dongleOption";
         const label = document.createElement("label");
@@ -117,7 +131,7 @@ export const UISearch = {
         input.type = "number";
         input.id = id;
         input.min = "0";
-        input.max = String(DongleSettings.SEARCH_MAX_S);
+        input.max = String(maxValue);
         input.step = "1";
         input.className = "dongleNumber";
         row.appendChild(label);
