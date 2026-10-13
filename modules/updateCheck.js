@@ -69,11 +69,28 @@ function link(text, url) {
     return a;
 }
 
+// The running firmware next to the page title, whether or not GitHub answers.
+function showVersion(version, companion) {
+    const label = document.getElementById("fwVersion");
+    if (!label) {
+        return;
+    }
+    const parts = [];
+    if (version) {
+        parts.push(`firmware ${version}`);
+    }
+    if (companion) {
+        parts.push(`ESP32 ${companion}`);
+    }
+    label.textContent = parts.join(" · ");
+}
+
 export const UpdateCheck = {
     /*  version: the adapter's (or, over Bluetooth on the hybrid, the ESP32's) version text;
      *  board: OGXM_BOARD when known (USB), to point at its file; companion: the hybrid ESP32's
      *  version when known. */
     async check({ version, board = null, companion = null }) {
+        showVersion(version, companion);
         const banner = document.getElementById("updateNotice");
         if (!banner) {
             return;
