@@ -1,5 +1,6 @@
 import { capabilities } from "../capabilities.js";
 import { UpdateCheck } from "../updateCheck.js";
+import { ConnectError } from "../connectError.js";
 import { BTInterface } from "./bluetoothInterface.js";
 import { UserSettings } from "../userSettings.js";
 import { UI } from "../uiSettings.js";
@@ -52,6 +53,11 @@ class BTManager {
     constructor() {
         this.#interface = new BTInterface();
         this.#mutex = new Mutex();
+    }
+
+    // Why the last init() failed (BTInterface), for the message on the page.
+    get lastError() {
+        return this.#interface.lastError;
     }
 
     async init() {
@@ -377,7 +383,7 @@ export const BT = {
             UI.connectButtonsEnabled(false);
 
             if (!(await btManager.init())) {
-                throw new Error('Failed to connect to Bluetooth device');
+                throw btManager.lastError || new Error("the adapter did not answer");
             }
 
             await btManager.getSetup(userSettings);
@@ -455,6 +461,7 @@ export const BT = {
 
         } catch (error) {
             console.warn('Connection error:', error);
+            ConnectError.remember(error, "Bluetooth");
             UI.toggleConnected(false);
             await btManager.disconnect();
             window.location.reload();

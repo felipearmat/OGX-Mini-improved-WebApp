@@ -27,7 +27,7 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
   searching for new controllers once one is connected, while a slot is open (a lone Joy-Con,
   free slots) — full search (0-600 s, default 60), then reduced search at about 10% (0-600 s or
   no limit, the default); both 0 = no search with a controller connected; the idle turn-off time;
-  and *Expand range for power consumption* (RP2040 + ESP32 adapter: +9 dBm instead of +3 dBm).
+  and *Extended range (uses more power)* (RP2040 + ESP32 adapter: +9 dBm instead of +3 dBm).
   Saved by itself a moment after the last change and applied without a restart, like *Mode
   Enabled*.
 - **Mouse + Keyboard Mode**: what each controller input sends in the firmware's mouse + keyboard
@@ -104,6 +104,14 @@ that format.
 USB: packets `GET_DONGLE_SETTINGS` (0x70) and `SET_DONGLE_SETTINGS` (0x71). Bluetooth:
 characteristic `12345678-1234-1234-1234-123456789060` (read / write). Firmware side:
 `Firmware/RP2040/src/Custom/DongleSettings.h`.
+
+## Connection messages
+
+When a connection fails, the page says why after it reloads (the USB port in use by another tab or
+program, a browser without Web Serial / Web Bluetooth, the error text otherwise); closing the port
+chooser is not an error. Once connected over USB, the subheader shows the adapter's board
+(`OGXM_BOARD`). When the adapter does not answer the newer requests, a note says its firmware may be
+older or that it is not in Web App mode.
 
 ## Update check
 

@@ -79,7 +79,7 @@ export class DongleSettings {
         },
         {
             key: "highTxPower", offset: 17, since: 5, capability: Capabilities.HIGH_TX_POWER, panel: "bluetooth",
-            label: "Expand range for power consumption",
+            label: "Extended range (uses more power)",
             help: "More range for the controllers (+9 dBm instead of +3 dBm on the RP2040 + ESP32 adapter), for a little more power use.",
         },
     ]);

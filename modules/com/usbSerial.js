@@ -13,6 +13,7 @@ import { UISearch } from "../uiSearch.js";
 import { UIDiagnostics } from "../uiDiagnostics.js";
 import { capabilities } from "../capabilities.js";
 import { UpdateCheck } from "../updateCheck.js";
+import { ConnectError } from "../connectError.js";
 
 class USBManager {
     static #PACKET_LENGTH = Object.freeze(64);
@@ -87,8 +88,9 @@ class USBManager {
         } catch (error) {
             console.warn('Connection error:', error);
             await this.#interface.disconnect();
-            return false;
+            throw error;  // USB.connect shows why
         }
+        return false;
     }
 
     async saveProfile() {
@@ -262,6 +264,9 @@ class USBManager {
 
             case USBManager.#PACKET_ID.GET_VERSION: {
                 const [version, board, companion] = new TextDecoder().decode(bufferIn.slice(0, dataLen)).split("\0");
+                if (board) {
+                    UI.setSubheaderText(board);  // e.g. ESP32_BLUEPAD32_I2C_PICO2
+                }
                 UpdateCheck.check({ version, board, companion: companion || null });
                 break;
             }
@@ -392,6 +397,8 @@ export const USB = {
     async connect() {
         if (!("serial" in navigator)) {
             console.error("Web Serial API not supported.");
+            ConnectError.remember(new Error("Web Serial is not supported"), "USB");
+            ConnectError.showPending();
             return;
         }
 
@@ -486,6 +493,7 @@ export const USB = {
 
         } catch (error) {
             console.warn('Connection error:', error);
+            ConnectError.remember(error, "USB");
             usbManager.disconnect();
             window.location.reload();
         }

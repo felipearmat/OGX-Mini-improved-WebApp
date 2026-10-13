@@ -19,10 +19,7 @@
         </div>
         <div class="separator"></div>
 
-        <div id="errorTxt" class="error hidden">
-            ⚠️ An error occurred
-            <br>
-        </div>
+        <div id="errorTxt" class="error hidden"></div>
 
         <div class="connectPanel show" id="connectPanel">
             <h3>Settings</h3>
@@ -31,8 +28,12 @@
             <label><b>Minimum firmware required:</b> OGX-Mini v1.0.0-alpha3. Adapter Options need <a href="https://github.com/felipearmat/OGX-Mini-improved">OGX-Mini-improved</a> firmware.</label><br><br>
             <label><b>Note:</b> To ensure your OGX-Mini (wired) adapter is in WebApp mode, hold Start + Left Bumper + Right Bumper for 3 seconds.</label>
             <div class="separator"></div>
-            <h3>Update Firmware</h3>
-            <button class="" id="connectOgxmW">OGX-Mini Wireless</button>
+            <h3>Update Firmware: OGX-Mini Wireless (original)</h3>
+            <label>For the original OGX-Mini Wireless (RP2040 + ESP32) only. An OGX-Mini-improved adapter
+                takes the UF2 for its board from the <a href="https://github.com/felipearmat/OGX-Mini-improved/releases">releases page</a>;
+                the RP2040 + ESP32 adapter's ESP32 is flashed through the adapter with
+                <code>Tools/hybrid/ogxm_hybrid.py flash-esp32</code>.</label><br><br>
+            <button class="" id="connectOgxmW">OGX-Mini Wireless (original)</button>
         </div>
 
         <div class="programPanel hidden" id="programPanel">
@@ -56,8 +57,9 @@
         <div class="settingsPanel hidden" id="settingsPanel">
             <div class="updateNotice hidden" id="updateNotice"></div>
             <div class="firmwareWarning hidden" id="firmwareWarning">
-                <strong>This adapter's firmware predates some of this page's features.</strong>
-                Profiles, axis settings and button mappings work as usual, but with this firmware:
+                <strong>The adapter did not answer some requests.</strong>
+                Its firmware may be older than this page, or it is not in Web App mode (hold Start + LB + RB
+                for 3 s). Profiles, axis settings and button mappings work as usual, but without an answer:
                 <ul>
                     <li>Adapter Options, Bluetooth search, Mode Enabled, Rumble Test and the Mouse + Keyboard
                         mapping are not shown;</li>
@@ -66,7 +68,7 @@
                     <li>the green highlight follows the button each input is mapped to, not the controller's
                         own button.</li>
                 </ul>
-                Update the adapter's firmware to the latest version to use them.
+                If the adapter is in Web App mode, update its firmware to the latest version to use them.
             </div>
             <div class="triPanel">
                 <div class="section">
@@ -314,16 +316,13 @@
             </div>
 
             <div id="searchPanel" class="dongleOptionsPanel hidden">
-                <label>While a controller is connected and a slot is still open (a lone Joy-Con waiting for
-                    its other half, or free slots), the adapter keeps searching for new controllers: at
-                    full speed first, then at about 10% (LED: fast blink, slow blink, then on = stopped).
-                    The full-speed search can add input lag to the connected controllers. Both 0 = no
-                    search once a controller is connected. With none connected it always searches at full
-                    speed, and known controllers reconnect even when the search has stopped.
-                    Start + L3 (3 s) stops the current search; a controller going away restarts it.
-                    A Bluetooth controller left on without input (buttons, sticks, or being picked up or
-                    turned) is turned off after the idle time, to save its battery (a Joy-Con pair counts
-                    as one controller). A longer range costs the adapter a little more power.</label>
+                <ul class="panelNotes">
+                    <li><b>Search:</b> with a controller connected and a slot still open (a lone Joy-Con, free
+                        slots), the adapter keeps looking for new controllers, at full speed and then at about
+                        10% (LED: fast blink, slow blink, on = stopped).</li>
+                    <li><b>Idle:</b> a Bluetooth controller left without input is turned off to save its battery.</li>
+                    <li><b>Range:</b> a stronger radio reaches controllers further away, for a little more power.</li>
+                </ul>
                 <div id="searchInput" class="dongleOptionsInput"></div>
                 <label id="searchStatus">Saved by itself, applied right away (no restart).</label>
             </div>

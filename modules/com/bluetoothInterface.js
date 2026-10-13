@@ -3,10 +3,12 @@ export class BTInterface {
     #server = null;
     #service = null;
     #connected = false;
+    lastError = null;  // why the last connect() failed
 
     async connect(uuid, options) {
         if (!navigator.bluetooth) {
             console.error("Web Bluetooth API is not available, try using a different browser.");
+            this.lastError = new Error("Web Bluetooth is not available");
             return false;
         }
 
@@ -21,6 +23,7 @@ export class BTInterface {
             this.#connected = true;
         } catch (error) {
             console.error('Bluetooth connection failed:', error);
+            this.lastError = error;
             this.disconnect();
         }
         return this.#connected;

@@ -22,9 +22,13 @@ export const UISearch = {
         }
         const max = DongleSettings.SEARCH_MAX_S;
 
-        const fullRow = this._numberRow("search-full", "Full search (seconds)");
+        const fullRow = this._numberRow("search-full", "Full search (seconds)",
+            DongleSettings.SEARCH_MAX_S, "0-600 s. Full speed can add input lag to the connected controllers.");
         const full = fullRow.querySelector("input");
-        const reducedRow = this._numberRow("search-reduced", "Reduced search (seconds)");
+        const reducedRow = this._numberRow("search-reduced", "Reduced search (seconds)",
+            DongleSettings.SEARCH_MAX_S, "About 10% of the radio time, after the full search. Both 0 = no search " +
+            "once a controller is connected. Start + L3 (3 s) stops the search; a controller going away restarts it. " +
+            "With none connected the adapter always searches at full speed, and known controllers always reconnect.");
         const reduced = reducedRow.querySelector("input");
         // "No limit" right next to the label, before the number.
         const noLimitWrap = document.createElement("span");
@@ -43,8 +47,9 @@ export const UISearch = {
         reducedRow.insertBefore(labelCell, reduced);
         container.appendChild(fullRow);
         container.appendChild(reducedRow);
-        const idleRow = this._numberRow("idle-off", "Turn controllers off after (minutes without input, 0 = never)",
-            DongleSettings.IDLE_MAX_MIN);
+        const idleRow = this._numberRow("idle-off", "Turn controllers off after (minutes)",
+            DongleSettings.IDLE_MAX_MIN, "Minutes without input (buttons, sticks, or being picked up or turned); " +
+            "0 = never. A Joy-Con pair counts as one controller.");
         idleRow.id = "idleOffRow";
         const idle = idleRow.querySelector("input");
         container.appendChild(idleRow);
@@ -168,7 +173,7 @@ export const UISearch = {
         }
     },
 
-    _numberRow(id, text, maxValue = DongleSettings.SEARCH_MAX_S) {
+    _numberRow(id, text, maxValue = DongleSettings.SEARCH_MAX_S, helpText = null) {
         const row = document.createElement("div");
         row.className = "dongleOption";
         const label = document.createElement("label");
@@ -183,6 +188,12 @@ export const UISearch = {
         input.className = "dongleNumber";
         row.appendChild(label);
         row.appendChild(input);
+        if (helpText) {
+            const help = document.createElement("div");
+            help.className = "dongleOptionHelp";
+            help.textContent = helpText;
+            row.appendChild(help);
+        }
         return row;
     },
 };

@@ -458,6 +458,15 @@ select:disabled {
     font-size: 0.9em;
 }
 
+.panelNotes {
+    margin: 4px 0 10px;
+    padding-left: 20px;
+}
+
+.panelNotes li {
+    margin: 2px 0;
+}
+
 .updateNotice .fwVersion {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
