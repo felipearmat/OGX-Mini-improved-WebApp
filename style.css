@@ -458,11 +458,8 @@ select:disabled {
     font-size: 0.9em;
 }
 
-.fwVersion {
-    font-size: 0.45em;
-    font-weight: normal;
-    color: #6c757d;
-    vertical-align: middle;
+.updateNotice .fwVersion {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 .updateNotice.hidden {

@@ -14,7 +14,7 @@ export const UIDongle = {
         }
         container.innerHTML = "";
 
-        for (const option of DongleSettings.OPTIONS) {
+        for (const option of DongleSettings.OPTIONS.filter((o) => !o.panel)) {  // the others: Bluetooth config
             const row = document.createElement("div");
             row.className = "dongleOption";
 
@@ -74,7 +74,7 @@ export const UIDongle = {
     },
 
     update(dongleSettings) {
-        for (const option of DongleSettings.OPTIONS) {
+        for (const option of DongleSettings.OPTIONS.filter((o) => !o.panel)) {
             const input = document.getElementById(`dongle-${option.key}`);
             if (!input) {
                 continue;

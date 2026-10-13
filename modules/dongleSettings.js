@@ -16,8 +16,9 @@
  *  Version 4, byte 16: minutes without input before a Bluetooth controller is turned off
  *  (0 = never). Applied without a restart.
  *  Version 5, byte 17: higher Bluetooth transmit power, where the radio allows it (the RP2040 +
- *  ESP32 hybrid). Applied without a restart. Each option names the capability it needs
- *  (capabilities.js); the panel turns it off when the hardware lacks it.
+ *  ESP32 hybrid). Applied without a restart, so it sits in the Bluetooth config panel (panel:
+ *  "bluetooth") and is saved live. Each option names the capability it needs (capabilities.js);
+ *  the panel turns it off when the hardware lacks it.
  */
 import { Capabilities } from "./capabilities.js";
 
@@ -77,9 +78,9 @@ export class DongleSettings {
             help: "Per side: the game's left (strong) motor rumbles the left Joy-Con and the right (weak) motor the right one, as when the pair is connected straight to a PC. Both: each Joy-Con plays both motors.",
         },
         {
-            key: "highTxPower", offset: 17, since: 5, capability: Capabilities.HIGH_TX_POWER,
-            label: "Higher Bluetooth transmit power",
-            help: "More range for the controllers (+9 dBm instead of +3 dBm on the RP2040 + ESP32 adapter), a little more power use. Applied without a restart.",
+            key: "highTxPower", offset: 17, since: 5, capability: Capabilities.HIGH_TX_POWER, panel: "bluetooth",
+            label: "Expand range for power consumption",
+            help: "More range for the controllers (+9 dBm instead of +3 dBm on the RP2040 + ESP32 adapter), for a little more power use.",
         },
     ]);
 
@@ -178,7 +179,17 @@ export class DongleSettings {
             this.#writeSearchTimes(bytes);
         }
         this.#writeIdle(bytes);
+        this.#writeLiveOptions(bytes);
         return bytes;
+    }
+
+    // Options shown in the Bluetooth config panel: the adapter applies them without a restart.
+    #writeLiveOptions(bytes) {
+        for (const option of this.availableOptions()) {
+            if (option.panel === "bluetooth" && bytes.length > option.offset) {
+                bytes[option.offset] = this.values[option.key] ? 1 : 0;
+            }
+        }
     }
 
     #writeIdle(bytes) {

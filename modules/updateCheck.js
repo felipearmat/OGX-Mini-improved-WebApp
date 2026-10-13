@@ -69,20 +69,16 @@ function link(text, url) {
     return a;
 }
 
-// The running firmware next to the page title, whether or not GitHub answers.
-function showVersion(version, companion) {
-    const label = document.getElementById("fwVersion");
-    if (!label) {
-        return;
-    }
-    const parts = [];
-    if (version) {
-        parts.push(`firmware ${version}`);
-    }
+// "Your firmware is: <adapter> · ESP32 <companion>", shown whether or not GitHub answers.
+function firmwareLine(version, companion) {
+    const parts = [version || "unknown"];
     if (companion) {
         parts.push(`ESP32 ${companion}`);
     }
-    label.textContent = parts.join(" · ");
+    const value = document.createElement("div");
+    value.className = "fwVersion";
+    value.textContent = parts.join(" · ");
+    return ["Your firmware is:", value];
 }
 
 export const UpdateCheck = {
@@ -90,20 +86,17 @@ export const UpdateCheck = {
      *  board: OGXM_BOARD when known (USB), to point at its file; companion: the hybrid ESP32's
      *  version when known. */
     async check({ version, board = null, companion = null }) {
-        showVersion(version, companion);
         const banner = document.getElementById("updateNotice");
         if (!banner) {
             return;
         }
+        const lines = [firmwareLine(version, companion)];
         const release = await latestRelease();
         const latest = release && parseVersion(release.tag);
-        if (!latest) {
-            return;
-        }
-        banner.innerHTML = "";
-        const lines = [];
         const current = parseVersion(version);
-        if (!current) {
+        if (!latest) {
+            // Offline, or GitHub did not answer: only the running versions.
+        } else if (!current) {
             // Not an OGX-Mini-improved build (the original firmware), or a build without a tag.
             lines.push(["This adapter's firmware is not an OGX-Mini-improved release. Latest: ",
                 link(latest.label, release.url), "."]);
@@ -112,16 +105,15 @@ export const UpdateCheck = {
             lines.push([`Firmware update available: ${latest.label} (this adapter: ${current.label}). `,
                 asset ? link(`Download ${asset.name}`, asset.url) : link("Release page", release.url),
                 asset ? " — or " : "", asset ? link("release page", release.url) : "", "."]);
-        } else if (current.ahead > 0) {
-            lines.push([`Development build: ${current.label} + ${current.ahead} commits (latest release ${latest.label}).`]);
         }
         const esp = parseVersion(companion);
-        if (companion && esp && compareVersions(esp, latest) < 0) {
+        if (latest && companion && esp && compareVersions(esp, latest) < 0) {
             const zip = release.assets.find((a) => a.name.endsWith("-ESP32_COMPANION.zip"));
             lines.push([`ESP32 update available: ${latest.label} (ESP32: ${esp.label}). `,
                 zip ? link(`Download ${zip.name}`, zip.url) : link("Release page", release.url),
                 " — flash it through the adapter with Tools/hybrid/ogxm_hybrid.py flash-esp32."]);
         }
+        banner.innerHTML = "";
         for (const parts of lines) {
             const p = document.createElement("div");
             for (const part of parts) {
@@ -129,7 +121,7 @@ export const UpdateCheck = {
             }
             banner.appendChild(p);
         }
-        banner.classList.toggle("hidden", lines.length === 0);
+        banner.classList.remove("hidden");
     },
 
     releasesPage: RELEASES_PAGE,
