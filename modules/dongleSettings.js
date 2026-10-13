@@ -15,12 +15,18 @@
  *  change of the mask alone applies it right away, without a restart.
  *  Version 4, byte 16: minutes without input before a Bluetooth controller is turned off
  *  (0 = never). Applied without a restart.
+ *  Version 5, byte 17: higher Bluetooth transmit power, where the radio allows it (the RP2040 +
+ *  ESP32 hybrid). Applied without a restart. Each option names the capability it needs
+ *  (capabilities.js); the panel turns it off when the hardware lacks it.
  */
+import { Capabilities } from "./capabilities.js";
+
 export class DongleSettings {
-    static VERSION = Object.freeze(4);
+    static VERSION = Object.freeze(5);
     static SEARCH_MAX_S = Object.freeze(600);
     static SEARCH_NO_LIMIT = Object.freeze(0xFFF);
-    static LENGTH = Object.freeze(17);
+    static LENGTH = Object.freeze(18);
+    static V4_LENGTH = Object.freeze(17);
     static V3_LENGTH = Object.freeze(16);
     static IDLE_OFFSET = Object.freeze(16);
     static IDLE_MAX_MIN = Object.freeze(255);
@@ -30,27 +36,27 @@ export class DongleSettings {
     // the others as a checkbox.
     static OPTIONS = Object.freeze([
         {
-            key: "disconnectPadsOnModeChange", offset: 1,
+            key: "disconnectPadsOnModeChange", offset: 1, capability: Capabilities.DISCONNECT_ON_MODE_CHANGE,
             label: "Turn off controllers before mode change",
             help: "Controllers switch off (light off) BEFORE changing mode to avoid getting stuck.",
         },
         {
-            key: "joyconPairImuRight", offset: 2,
+            key: "joyconPairImuRight", offset: 2, capability: Capabilities.JOYCON,
             label: "Joy-Con pair: motion from",
             choices: [{ label: "Right Joy-Con", value: 1 }, { label: "Left Joy-Con", value: 0 }],
         },
         {
-            key: "joyconPairHorizontal", offset: 3,
+            key: "joyconPairHorizontal", offset: 3, capability: Capabilities.JOYCON,
             label: "Joy-Con pair orientation",
             choices: [{ label: "Vertical", value: 0 }, { label: "Horizontal", value: 1 }],
         },
         {
-            key: "joyconSoloHorizontal", offset: 4,
+            key: "joyconSoloHorizontal", offset: 4, capability: Capabilities.JOYCON,
             label: "Single Joy-Con orientation",
             choices: [{ label: "Vertical", value: 0 }, { label: "Horizontal (sideways)", value: 1 }],
         },
         {
-            key: "macPerController", offset: 5,
+            key: "macPerController", offset: 5, capability: Capabilities.MAC_PER_CONTROLLER,
             label: "Use a MAC address per controller",
             help: "PS4 / STEAM modes: report the connected controller's Bluetooth address instead of the adapter's, so Steam keeps separate settings per controller. The adapter reconnects to the PC once when a controller connects.",
         },
@@ -65,10 +71,15 @@ export class DongleSettings {
             help: "Accept one Bluetooth controller only: a lone Joy-Con does not wait for its other half, so adapters next to each other do not take each other's controllers. Also set with Start + L3 (on) / Start + L3 + LB (off).",
         },
         {
-            key: "joyconPairRumblePerSide", offset: 8, since: 2,
+            key: "joyconPairRumblePerSide", offset: 8, since: 2, capability: Capabilities.JOYCON,
             label: "Joy-Con pair rumble",
             choices: [{ label: "Per side (as SDL / Steam)", value: 1 }, { label: "Both Joy-Cons", value: 0 }],
             help: "Per side: the game's left (strong) motor rumbles the left Joy-Con and the right (weak) motor the right one, as when the pair is connected straight to a PC. Both: each Joy-Con plays both motors.",
+        },
+        {
+            key: "highTxPower", offset: 17, since: 5, capability: Capabilities.HIGH_TX_POWER,
+            label: "Higher Bluetooth transmit power",
+            help: "More range for the controllers (+9 dBm instead of +3 dBm on the RP2040 + ESP32 adapter), a little more power use. Applied without a restart.",
         },
     ]);
 
@@ -108,7 +119,8 @@ export class DongleSettings {
 
     // Record length of a version.
     static lengthOf(version) {
-        return version >= 4 ? DongleSettings.LENGTH : version >= 2 ? DongleSettings.V3_LENGTH : DongleSettings.V1_LENGTH;
+        return version >= 5 ? DongleSettings.LENGTH : version >= 4 ? DongleSettings.V4_LENGTH
+            : version >= 2 ? DongleSettings.V3_LENGTH : DongleSettings.V1_LENGTH;
     }
 
     // Options the connected firmware knows (it answered in this.version).

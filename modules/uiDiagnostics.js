@@ -66,6 +66,14 @@ export const UIDiagnostics = {
                 (k.message ? ` "${k.message}"` : "") + (k.pc ? ` at ${k.pc}` : "") +
                 " - include the log report when asking for help";
         }
+        if (report.companion) {
+            // RP2040 + ESP32 adapter: what the ESP32 (the Bluetooth side) reports about itself.
+            const e = report.companion;
+            info.textContent += `. Bluetooth on the ESP32: firmware ${e.firmware || "?"}, up ${e.uptime_s} s, ` +
+                `transmit power ${e.high_tx_power ? "high" : "default"}, link to the ESP32: ` +
+                `${e.i2c_write_errors} write / ${e.i2c_read_errors} read errors, ${e.i2c_queue_drops} queue drops` +
+                (e.last_heard_s > 10 ? ` (last heard ${e.last_heard_s} s ago)` : "");
+        }
         if (report.bluetooth && report.bluetooth.bredr_inquiry_running) {
             info.textContent += ". Searching for new Bluetooth controllers (slows down the connected ones)";
         }
@@ -110,12 +118,16 @@ export const UIDiagnostics = {
                 signal += `, adapter TX ${c.tx_power_dbm}` +
                     (c.tx_power_max_dbm !== undefined ? `/${c.tx_power_max_dbm}` : "") + " dBm";
             }
+            // RP2040 + ESP32: what reached the ESP32 next to what reached the RP2040, so radio
+            // losses (before the ESP32) and link losses (between the boards) can be told apart.
+            const esp32 = c.esp32_reports_per_s !== undefined;
             addRow([
                 `${c.name} (${c.vid}:${c.pid})${details ? ` - ${details}` : ""}`,
                 link,
-                `${c.reports_per_s}`,
+                esp32 ? `${c.reports_per_s} (ESP32 ${c.esp32_reports_per_s})` : `${c.reports_per_s}`,
                 pct(c.late_reports_pct),
-                pct(c.lost_reports_pct),
+                esp32 && c.esp32_lost_reports_pct !== undefined
+                    ? `${pct(c.lost_reports_pct)} (radio ${pct(c.esp32_lost_reports_pct)})` : pct(c.lost_reports_pct),
                 `${c.max_gap_ms_recent} ms`,
                 signal,
                 `${c.connected_s} s`,

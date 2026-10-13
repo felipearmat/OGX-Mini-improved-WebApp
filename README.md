@@ -17,7 +17,12 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
   - Use a MAC address per controller (PS4 / STEAM modes)
   - Legacy PS4 motion scale (Brook auth adapters)
   - Joy-Con pair rumble: per side (as SDL / Steam) or both Joy-Cons
+  - Higher Bluetooth transmit power (RP2040 + ESP32 adapter: +9 dBm instead of +3 dBm; applied
+    without a restart)
   - Single controller (firmware from before the Bluetooth search times only)
+
+  Options the adapter's hardware can't use (the transmit power on a Pico W, the Bluetooth
+  options on a wired-only adapter) are greyed out, with a note on hover.
 
   The panel appears only when the adapter's firmware supports it.
 - **Bluetooth search** (its own section, before Diagnostics): how long the adapter keeps
@@ -89,19 +94,32 @@ On Windows, `start.bat` does the same.
 
 ## Protocol notes (Adapter Options)
 
-16 bytes: a version byte (3), then one byte per option (0 / 1) in bytes 1-6 and 8 (byte 7 is
+18 bytes: a version byte (5), then one byte per option (0 / 1) in bytes 1-6 and 8 (byte 7 is
 unused); bytes 9-11 hold the two search times as 12-bit second counts (full = bits 0-11,
-reduced = bits 12-23, 4095 = no limit); bytes 12-15 the mode combo mask. Older firmware answers
-with version 2 (byte 7 = single controller, no search times) or 1 (the first 8 bytes); the page
-then shows only those options and saves in that format.
+reduced = bits 12-23, 4095 = no limit); bytes 12-15 the mode combo mask; byte 16 the idle
+turn-off time (minutes, 0 = never; version 4); byte 17 the higher transmit power (version 5).
+Older firmware answers with version 4 (17 bytes), 3 (16 bytes), 2 (byte 7 = single controller,
+no search times) or 1 (the first 8 bytes); the page then shows only those options and saves in
+that format.
 USB: packets `GET_DONGLE_SETTINGS` (0x70) and `SET_DONGLE_SETTINGS` (0x71). Bluetooth:
 characteristic `12345678-1234-1234-1234-123456789060` (read / write). Firmware side:
 `Firmware/RP2040/src/Custom/DongleSettings.h`.
 
+## Protocol notes (Capabilities)
+
+What the adapter's hardware supports, 32 bits little-endian (firmware
+`Firmware/common/UserSettings/Capabilities.h`): Bluetooth, RP2040 + ESP32, higher transmit power,
+Joy-Con options, MAC per controller, turn off before a mode change, search times, idle turn-off,
+USB host port, web app over Bluetooth. USB: packet `GET_CAPABILITIES` (0x76). Bluetooth: the 4
+bytes after the Adapter Options record. Older firmware sends neither; every option is then shown.
+
 ## Protocol notes (Diagnostics)
 
 USB packet `GET_DIAGNOSTICS` (0x74, one byte of payload). The adapter answers with a JSON text
-in up to 255 chunks of 55 bytes (`chunks_total` / `chunk_idx` in the header). Firmware side:
+in up to 255 chunks of 55 bytes (`chunks_total` / `chunk_idx` in the header). On an RP2040 +
+ESP32 adapter the report also has `companion` (the ESP32's firmware, uptime, transmit power,
+I2C errors) and, per controller, `esp32_reports_per_s` / `esp32_lost_reports_pct` (measured on
+the ESP32: losses there are the radio's, the rest between the boards). Firmware side:
 `Firmware/RP2040/src/Custom/Diagnostics.h`.
 
 ## Protocol notes (Mouse + Keyboard Mode)

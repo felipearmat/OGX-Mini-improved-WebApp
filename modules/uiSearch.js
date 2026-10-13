@@ -1,5 +1,6 @@
 import { DongleSettings } from "./dongleSettings.js";
 import { UIDongle } from "./uiDongle.js";
+import { Capabilities, capabilities } from "./capabilities.js";
 
 /*  "Bluetooth search" panel (OGX-Mini-improved firmware, Adapter Options version 3): how long the
  *  adapter keeps searching for new controllers while a slot is open with a controller connected
@@ -69,6 +70,8 @@ export const UISearch = {
         idle.addEventListener("input", changed);
         noLimit.addEventListener("change", changed);
 
+        capabilities.addListener(() => this.update(dongleSettings));  // the adapter answered
+
         const toggle = document.getElementById("button-toggleSearch");
         const panel = document.getElementById("searchPanel");
         if (toggle && panel) {
@@ -102,8 +105,13 @@ export const UISearch = {
         if (noLimit) {
             noLimit.checked = unlimited;
         }
+        // Off, with a note, where this hardware can't use them (capabilities.js).
+        const search = capabilities.supports(Capabilities.SEARCH_TIMES);
+        for (const input of [full, reduced]) {
+            Capabilities.markRow(input && input.closest(".dongleOption"), search);
+        }
         if (reduced) {
-            reduced.disabled = unlimited;
+            reduced.disabled = unlimited || !search;
             reduced.value = String(unlimited ? DongleSettings.SEARCH_MAX_S : dongleSettings.values.reducedSearchSeconds);
         }
         const idleRow = document.getElementById("idleOffRow");
@@ -111,6 +119,7 @@ export const UISearch = {
         if (idleRow && idle) {
             idleRow.classList.toggle("hidden", dongleSettings.version < 4);
             idle.value = String(dongleSettings.values.idleOffMinutes);
+            Capabilities.markRow(idleRow, capabilities.supports(Capabilities.IDLE_OFF));
         }
     },
 

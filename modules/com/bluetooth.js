@@ -1,3 +1,4 @@
+import { capabilities } from "../capabilities.js";
 import { BTInterface } from "./bluetoothInterface.js";
 import { UserSettings } from "../userSettings.js";
 import { UI } from "../uiSettings.js";
@@ -184,7 +185,12 @@ class BTManager {
         await this.#mutex.lock();
         const buffer = await this.#tryRead(BTManager.UUID.DONGLE_SETTINGS);
         this.#mutex.unlock();
-        return !!buffer && dongleSettings.setFromBytes(buffer);
+        if (!buffer || !dongleSettings.setFromBytes(buffer)) {
+            return false;
+        }
+        // Newer firmware: the hardware's capabilities follow the record (capabilities.js).
+        capabilities.setFromBytes(buffer, DongleSettings.lengthOf(dongleSettings.version));
+        return true;
     }
 
     // The adapter stores the options and restarts (the page reloads on disconnect).

@@ -1,5 +1,6 @@
 import { DongleSettings } from "./dongleSettings.js";
 import { ModeView } from "./modeView.js";
+import { Capabilities, capabilities } from "./capabilities.js";
 
 /*  "Adapter Options" panel (OGX-Mini-improved firmware). Hidden until the adapter answers with
  *  its dongle settings; older firmware never does. */
@@ -60,6 +61,9 @@ export const UIDongle = {
 
         const toggle = document.getElementById("button-toggleDongleOptions");
         const panel = document.getElementById("dongleOptionsPanel");
+        if (!this.built) {
+            capabilities.addListener(() => this.update(dongleSettings));  // the adapter answered
+        }
         if (toggle && panel && !this.built) {
             toggle.addEventListener("click", () => {
                 const hidden = panel.classList.toggle("hidden");
@@ -86,6 +90,8 @@ export const UIDongle = {
             } else {
                 input.checked = dongleSettings.values[option.key] !== 0;
             }
+            // Off, with a note, where this hardware can't use it (capabilities.js).
+            Capabilities.markRow(row, capabilities.supports(option.capability));
         }
     },
 

@@ -11,6 +11,7 @@ import { UIRumble } from "../uiRumble.js";
 import { UITouchpad } from "../uiTouchpad.js";
 import { UISearch } from "../uiSearch.js";
 import { UIDiagnostics } from "../uiDiagnostics.js";
+import { capabilities } from "../capabilities.js";
 
 class USBManager {
     static #PACKET_LENGTH = Object.freeze(64);
@@ -29,6 +30,7 @@ class USBManager {
         GET_KBM_SETTINGS: 0x72,
         SET_KBM_SETTINGS: 0x73,
         GET_DIAGNOSTICS: 0x74,
+        GET_CAPABILITIES: 0x76,
         SET_GP_IN: 0x80,
         GP_TOUCH: 0x82,
         SET_GP_OUT: 0x81,
@@ -126,6 +128,12 @@ class USBManager {
     // Adapter options (OGX-Mini-improved firmware); older firmware ignores the request.
     async getDongleSettings() {
         let header = this.#headerFromUi(USBManager.#PACKET_ID.GET_DONGLE_SETTINGS);
+        await this.#writeToDevice(header, new Uint8Array([0xFF]));
+    }
+
+    // What the hardware supports (newer firmware); an older one does not answer.
+    async getCapabilities() {
+        let header = this.#headerFromUi(USBManager.#PACKET_ID.GET_CAPABILITIES);
         await this.#writeToDevice(header, new Uint8Array([0xFF]));
     }
 
@@ -242,6 +250,10 @@ class USBManager {
                     UISearch.update(this.#dongleSettings);
                     UIRumble.setAvailable(true);  // same firmware generation
                 }
+                break;
+
+            case USBManager.#PACKET_ID.GET_CAPABILITIES:
+                capabilities.setFromBytes(bufferIn.slice(0, dataLen));
                 break;
 
             case USBManager.#PACKET_ID.GET_KBM_SETTINGS:
@@ -387,6 +399,7 @@ export const USB = {
 
             await usbManager.getProfileByIdx();
             await usbManager.getDongleSettings();
+            await usbManager.getCapabilities();
             // No answer (older firmware) within 1.5 s: warn what will not work as expected.
             setTimeout(() => ModeView.setFirmwareWarning(!dongleSettings.storedBytes), 1500);
             await usbManager.getKbmSettings();
@@ -416,6 +429,7 @@ export const USB = {
                 device_mode: userSettings.deviceMode,
                 max_gamepads: userSettings.maxGamepads,
                 adapter_options: dongleSettings.version ? { version: dongleSettings.version, ...dongleSettings.values } : null,
+                capabilities: capabilities.known ? `0x${capabilities.mask.toString(16)}` : null,
                 mouse_keyboard_mapping: Array.from(kbmSettings.getBytes()),
             }));
             UIDiagnostics.setAvailable(true);

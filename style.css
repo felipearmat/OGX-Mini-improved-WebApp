@@ -286,6 +286,38 @@ select:disabled {
     gap: 4px 12px;
 }
 
+/* An option this adapter's hardware can't use (capabilities.js): greyed out, a note on hover. */
+.dongleOption.unsupported {
+    position: relative;
+    cursor: help;
+}
+
+.dongleOption.unsupported > label,
+.dongleOption.unsupported > span,
+.dongleOption.unsupported > input,
+.dongleOption.unsupported > select,
+.dongleOption.unsupported > .dongleOptionHelp {
+    opacity: 0.45;
+}
+
+.dongleOption.unsupported:hover::after,
+.dongleOption.unsupported:focus::after {
+    content: attr(data-note);
+    position: absolute;
+    left: 0;
+    top: 100%;
+    z-index: 10;
+    margin-top: 4px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: var(--text-color);
+    color: var(--background-color);
+    font-size: 0.85em;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    pointer-events: none;
+}
+
 .dongleOptionHelp {
     grid-column: 1 / -1;
     font-size: 0.85em;
