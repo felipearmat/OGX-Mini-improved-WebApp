@@ -1,4 +1,5 @@
 import { capabilities } from "../capabilities.js";
+import { UpdateCheck } from "../updateCheck.js";
 import { BTInterface } from "./bluetoothInterface.js";
 import { UserSettings } from "../userSettings.js";
 import { UI } from "../uiSettings.js";
@@ -178,6 +179,14 @@ class BTManager {
 
         this.#mutex.unlock();
         return success;
+    }
+
+    // The firmware version characteristic (OGX-Mini-improved: its release version).
+    async getVersion() {
+        await this.#mutex.lock();
+        const buffer = await this.#tryRead(BTManager.UUID.FIRMWARE_VER);
+        this.#mutex.unlock();
+        return buffer ? new TextDecoder().decode(buffer) : null;
     }
 
     // Adapter options (OGX-Mini-improved firmware). False when the adapter lacks them.
@@ -372,6 +381,10 @@ export const BT = {
             }
 
             await btManager.getSetup(userSettings);
+            const version = await btManager.getVersion();
+            if (version) {
+                UpdateCheck.check({ version });  // the board is not known over Bluetooth
+            }
             await btManager.getProfileByIdx(userSettings);
             if (await btManager.getDongleSettings(dongleSettings)) {
                 UIDongle.update(dongleSettings);

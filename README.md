@@ -105,6 +105,15 @@ USB: packets `GET_DONGLE_SETTINGS` (0x70) and `SET_DONGLE_SETTINGS` (0x71). Blue
 characteristic `12345678-1234-1234-1234-123456789060` (read / write). Firmware side:
 `Firmware/RP2040/src/Custom/DongleSettings.h`.
 
+## Update check
+
+On connecting, the page compares the adapter's version with the latest release of
+[felipearmat/OGX-Mini-improved](https://github.com/felipearmat/OGX-Mini-improved/releases) (GitHub
+API, cached for an hour) and shows a notice with the file for this board, and on an RP2040 + ESP32
+adapter for its ESP32 too; a build newer than the release shows as a development build. Offline,
+nothing is shown. USB: packet `GET_VERSION` (0x77), NUL-separated version, board and ESP32 version.
+Bluetooth: the firmware version characteristic (`...9020`).
+
 ## Protocol notes (Capabilities)
 
 What the adapter's hardware supports, 32 bits little-endian (firmware

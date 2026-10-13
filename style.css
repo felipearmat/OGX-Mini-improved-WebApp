@@ -447,6 +447,21 @@ select:disabled {
     font-size: 0.9em;
 }
 
+/* Newer firmware on GitHub (modules/updateCheck.js). */
+.updateNotice {
+    margin: 8px 0 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--primary-color);
+    border-radius: 6px;
+    background-color: #e8f2ff;
+    color: #0b3a6e;
+    font-size: 0.9em;
+}
+
+.updateNotice.hidden {
+    display: none;
+}
+
 .firmwareWarning ul {
     margin: 6px 0;
     padding-left: 20px;

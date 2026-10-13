@@ -12,6 +12,7 @@ import { UITouchpad } from "../uiTouchpad.js";
 import { UISearch } from "../uiSearch.js";
 import { UIDiagnostics } from "../uiDiagnostics.js";
 import { capabilities } from "../capabilities.js";
+import { UpdateCheck } from "../updateCheck.js";
 
 class USBManager {
     static #PACKET_LENGTH = Object.freeze(64);
@@ -31,6 +32,7 @@ class USBManager {
         SET_KBM_SETTINGS: 0x73,
         GET_DIAGNOSTICS: 0x74,
         GET_CAPABILITIES: 0x76,
+        GET_VERSION: 0x77,
         SET_GP_IN: 0x80,
         GP_TOUCH: 0x82,
         SET_GP_OUT: 0x81,
@@ -134,6 +136,12 @@ class USBManager {
     // What the hardware supports (newer firmware); an older one does not answer.
     async getCapabilities() {
         let header = this.#headerFromUi(USBManager.#PACKET_ID.GET_CAPABILITIES);
+        await this.#writeToDevice(header, new Uint8Array([0xFF]));
+    }
+
+    // Versions (newer firmware): this firmware, the board, the hybrid's ESP32.
+    async getVersion() {
+        let header = this.#headerFromUi(USBManager.#PACKET_ID.GET_VERSION);
         await this.#writeToDevice(header, new Uint8Array([0xFF]));
     }
 
@@ -251,6 +259,12 @@ class USBManager {
                     UIRumble.setAvailable(true);  // same firmware generation
                 }
                 break;
+
+            case USBManager.#PACKET_ID.GET_VERSION: {
+                const [version, board, companion] = new TextDecoder().decode(bufferIn.slice(0, dataLen)).split("\0");
+                UpdateCheck.check({ version, board, companion: companion || null });
+                break;
+            }
 
             case USBManager.#PACKET_ID.GET_CAPABILITIES:
                 capabilities.setFromBytes(bufferIn.slice(0, dataLen));
@@ -400,6 +414,9 @@ export const USB = {
             await usbManager.getProfileByIdx();
             await usbManager.getDongleSettings();
             await usbManager.getCapabilities();
+            await usbManager.getVersion();
+            // The hybrid's ESP32 reports its version every few seconds: ask again once it has.
+            setTimeout(() => usbManager.getVersion(), 7000);
             // No answer (older firmware) within 1.5 s: warn what will not work as expected.
             setTimeout(() => ModeView.setFirmwareWarning(!dongleSettings.storedBytes), 1500);
             await usbManager.getKbmSettings();
