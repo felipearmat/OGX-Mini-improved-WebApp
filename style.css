@@ -279,11 +279,70 @@ select:disabled {
     display: none;
 }
 
+.dongleOptionsInput {
+    display: flex;
+    flex-direction: column;
+}
+
+/* One option per row: label | control, its help right under the label, rows split by a rule. */
 .dongleOption {
     display: grid;
     grid-template-columns: minmax(220px, 1fr) auto;
     align-items: center;
-    gap: 4px 12px;
+    gap: 2px 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid #e3e6ea;
+}
+
+.dongleOption:last-child {
+    border-bottom: none;
+}
+
+.dongleOption > input,
+.dongleOption > select {
+    justify-self: end;
+}
+
+.dongleOption > select {
+    min-width: 12rem;
+}
+
+/* ⓘ popover on a label (Capabilities.addTip). */
+.hasTip {
+    position: relative;
+    cursor: help;
+}
+
+.hasTip::after {
+    content: " ⓘ";
+    color: var(--primary-color);
+}
+
+.hasTip:hover::before,
+.hasTip:focus::before {
+    content: attr(data-tip);
+    position: absolute;
+    left: 0;
+    top: 100%;
+    z-index: 10;
+    width: max-content;
+    max-width: min(22rem, 80vw);
+    margin-top: 6px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: var(--text-color);
+    color: var(--background-color);
+    font-size: 0.85em;
+    font-weight: normal;
+    line-height: 1.35;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    pointer-events: none;
+}
+
+/* Live settings: what is on the adapter, or when it was last saved. */
+.saveStatus {
+    font-size: 0.85em;
+    color: #1e6b34;
 }
 
 /* An option this adapter's hardware can't use (capabilities.js): greyed out, a note on hover. */
@@ -321,7 +380,7 @@ select:disabled {
 .dongleOptionHelp {
     grid-column: 1 / -1;
     font-size: 0.85em;
-    opacity: 0.75;
+    color: #6c757d;
 }
 
 .dongleOptionsControls {
@@ -456,15 +515,6 @@ select:disabled {
     background-color: #e8f2ff;
     color: #0b3a6e;
     font-size: 0.9em;
-}
-
-.panelNotes {
-    margin: 4px 0 10px;
-    padding-left: 20px;
-}
-
-.panelNotes li {
-    margin: 2px 0;
 }
 
 .updateNotice .fwVersion {

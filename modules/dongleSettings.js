@@ -39,7 +39,7 @@ export class DongleSettings {
         {
             key: "disconnectPadsOnModeChange", offset: 1, capability: Capabilities.DISCONNECT_ON_MODE_CHANGE,
             label: "Turn off controllers before mode change",
-            help: "Controllers switch off (light off) BEFORE changing mode to avoid getting stuck.",
+            help: "Controllers switch off (light off) before the mode changes, so none gets stuck in the old mode.",
         },
         {
             key: "joyconPairImuRight", offset: 2, capability: Capabilities.JOYCON,
@@ -80,7 +80,8 @@ export class DongleSettings {
         {
             key: "highTxPower", offset: 17, since: 5, capability: Capabilities.HIGH_TX_POWER, panel: "bluetooth",
             label: "Extended range (uses more power)",
-            help: "More range for the controllers (+9 dBm instead of +3 dBm on the RP2040 + ESP32 adapter), for a little more power use.",
+            tip: "Range: a stronger radio reaches controllers further away, for a little more power.",
+            help: "+9 dBm instead of +3 dBm (RP2040 + ESP32 adapter).",
         },
     ]);
 

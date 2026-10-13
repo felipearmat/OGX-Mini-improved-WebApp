@@ -316,15 +316,8 @@
             </div>
 
             <div id="searchPanel" class="dongleOptionsPanel hidden">
-                <ul class="panelNotes">
-                    <li><b>Search:</b> with a controller connected and a slot still open (a lone Joy-Con, free
-                        slots), the adapter keeps looking for new controllers, at full speed and then at about
-                        10% (LED: fast blink, slow blink, on = stopped).</li>
-                    <li><b>Idle:</b> a Bluetooth controller left without input is turned off to save its battery.</li>
-                    <li><b>Range:</b> a stronger radio reaches controllers further away, for a little more power.</li>
-                </ul>
                 <div id="searchInput" class="dongleOptionsInput"></div>
-                <label id="searchStatus">Saved by itself, applied right away (no restart).</label>
+                <div id="searchStatus" class="saveStatus" title="Saved by itself and applied right away (no restart).">Current Config</div>
             </div>
 
             <div class="togglePanelControl hidden" id="diagnosticsControl">
@@ -365,7 +358,7 @@
                 <div id="dongleOptionsInput" class="dongleOptionsInput"></div>
                 <div class="dongleOptionsControls">
                     <button class="controlsButton" id="button-saveDongleOptions">Save Adapter Options</button>
-                    <label>Saving restarts the adapter.</label>
+                    <span class="dongleOptionHelp">Saving restarts the adapter.</span>
                 </div>
             </div>
 

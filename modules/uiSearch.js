@@ -11,6 +11,7 @@ import { Capabilities, capabilities } from "./capabilities.js";
  *  input, 0 = never), saved the same way, and version 5 the live adapter options (transmit power). */
 export const UISearch = {
     built: false,
+    saved: false,  // a live save happened since the page connected
 
     init(dongleSettings) {
         if (this.built) {
@@ -24,6 +25,9 @@ export const UISearch = {
 
         const fullRow = this._numberRow("search-full", "Full search (seconds)",
             DongleSettings.SEARCH_MAX_S, "0-600 s. Full speed can add input lag to the connected controllers.");
+        Capabilities.addTip(fullRow.querySelector("label"), "Search: with a controller connected and a slot still " +
+            "open (a lone Joy-Con, free slots), the adapter keeps looking for new controllers, at full speed and " +
+            "then at about 10% (LED: fast blink, slow blink, on = stopped).");
         const full = fullRow.querySelector("input");
         const reducedRow = this._numberRow("search-reduced", "Reduced search (seconds)",
             DongleSettings.SEARCH_MAX_S, "About 10% of the radio time, after the full search. Both 0 = no search " +
@@ -50,6 +54,8 @@ export const UISearch = {
         const idleRow = this._numberRow("idle-off", "Turn controllers off after (minutes)",
             DongleSettings.IDLE_MAX_MIN, "Minutes without input (buttons, sticks, or being picked up or turned); " +
             "0 = never. A Joy-Con pair counts as one controller.");
+        Capabilities.addTip(idleRow.querySelector("label"),
+            "Idle: a Bluetooth controller left without input is turned off to save its battery.");
         idleRow.id = "idleOffRow";
         const idle = idleRow.querySelector("input");
         container.appendChild(idleRow);
@@ -72,8 +78,8 @@ export const UISearch = {
             });
             row.appendChild(label);
             row.appendChild(box);
+            Capabilities.addTip(label, option.tip);
             if (option.help) {
-                label.title = option.help;
                 const help = document.createElement("div");
                 help.className = "dongleOptionHelp";
                 help.textContent = option.help;
@@ -95,7 +101,10 @@ export const UISearch = {
                 ? DongleSettings.SEARCH_NO_LIMIT : clamp(reduced);
             this.setStatus("Saving...");
             UIDongle.scheduleLiveSave(() => {
-                this.setStatus(`Saved (${new Date().toLocaleTimeString()}), applied right away.`);
+                const t = new Date();
+                const hms = [t.getHours(), t.getMinutes(), t.getSeconds()].map((n) => String(n).padStart(2, "0")).join(":");
+                this.saved = true;
+                this.setStatus(`Latest Save ${hms}`);
             });
         };
         full.addEventListener("input", changed);
@@ -127,6 +136,9 @@ export const UISearch = {
         }
         if (!available) {
             return;
+        }
+        if (!this.saved) {
+            this.setStatus("Current Config");  // as read from the adapter
         }
         const full = document.getElementById("search-full");
         const reduced = document.getElementById("search-reduced");

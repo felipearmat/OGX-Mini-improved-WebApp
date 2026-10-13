@@ -52,6 +52,16 @@ export class Capabilities {
         this.listeners.push(fn);
     }
 
+    // An ⓘ popover on a settings label (style.css .hasTip), also shown on keyboard focus.
+    static addTip(label, text) {
+        if (!label || !text) {
+            return;
+        }
+        label.dataset.tip = text;
+        label.classList.add("hasTip");
+        label.tabIndex = 0;
+    }
+
     // Turn a settings row on or off: label and field disabled, a note on hover / focus.
     static markRow(row, supported) {
         if (!row) {

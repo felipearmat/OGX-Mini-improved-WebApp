@@ -22,9 +22,7 @@ export const UIDongle = {
             const label = document.createElement("label");
             label.htmlFor = id;
             label.textContent = option.label;
-            if (option.help) {
-                label.title = option.help;
-            }
+            Capabilities.addTip(label, option.tip);
 
             let input;
             if (option.choices) {
