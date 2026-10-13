@@ -17,19 +17,19 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
   - Use a MAC address per controller (PS4 / STEAM modes)
   - Legacy PS4 motion scale (Brook auth adapters)
   - Joy-Con pair rumble: per side (as SDL / Steam) or both Joy-Cons
-  - Higher Bluetooth transmit power (RP2040 + ESP32 adapter: +9 dBm instead of +3 dBm; applied
-    without a restart)
   - Single controller (firmware from before the Bluetooth search times only)
 
-  Options the adapter's hardware can't use (the transmit power on a Pico W, the Bluetooth
-  options on a wired-only adapter) are greyed out, with a note on hover.
+  Options the adapter's hardware can't use (the Joy-Con options on a wired-only adapter, the
+  transmit power in Bluetooth config on a Pico W) are greyed out, with a note on hover.
 
   The panel appears only when the adapter's firmware supports it.
-- **Bluetooth search** (its own section, before Diagnostics): how long the adapter keeps
+- **Bluetooth config** (its own section, before Diagnostics): how long the adapter keeps
   searching for new controllers once one is connected, while a slot is open (a lone Joy-Con,
   free slots) — full search (0-600 s, default 60), then reduced search at about 10% (0-600 s or
-  no limit, the default); both 0 = no search with a controller connected. Saved by itself a
-  moment after the last change and applied without a restart, like *Mode Enabled*.
+  no limit, the default); both 0 = no search with a controller connected; the idle turn-off time;
+  and *Expand range for power consumption* (RP2040 + ESP32 adapter: +9 dBm instead of +3 dBm).
+  Saved by itself a moment after the last change and applied without a restart, like *Mode
+  Enabled*.
 - **Mouse + Keyboard Mode**: what each controller input sends in the firmware's mouse + keyboard
   output mode — any key (with Ctrl / Shift / Alt / Win held), a mouse button or a media key; each
   stick as pointer, scroll, arrow keys or WASD; pointer / scroll speed, deadzone, acceleration,
@@ -109,9 +109,9 @@ characteristic `12345678-1234-1234-1234-123456789060` (read / write). Firmware s
 
 On connecting, the page compares the adapter's version with the latest release of
 [felipearmat/OGX-Mini-improved](https://github.com/felipearmat/OGX-Mini-improved/releases) (GitHub
-API, cached for an hour) and shows a notice with the file for this board, and on an RP2040 + ESP32
-adapter for its ESP32 too; a build newer than the release shows as a development build. Offline,
-nothing is shown. USB: packet `GET_VERSION` (0x77), NUL-separated version, board and ESP32 version.
+API, cached for an hour). The notice always shows the running firmware ("Your firmware is:", and
+the ESP32's on an RP2040 + ESP32 adapter) and, when a newer release exists, the file for this board
+(and the ESP32's zip). Offline, only the running firmware is shown. USB: packet `GET_VERSION` (0x77), NUL-separated version, board and ESP32 version.
 Bluetooth: the firmware version characteristic (`...9020`).
 
 ## Protocol notes (Capabilities)
