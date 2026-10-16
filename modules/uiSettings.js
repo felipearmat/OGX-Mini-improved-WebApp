@@ -642,7 +642,7 @@ export const UI = {
     },
 
     /*  Controller inputs pressed in this report, by profile field key (dpadUp, buttonA...), plus
-     *  the triggers as "triggerL" / "triggerR". In Web App mode the adapter sends the controller's
+     *  the triggers as "triggerL" / "triggerR". In D-Input/Debug mode, while the web app is open, the adapter sends the controller's
      *  own buttons (no profile mapping), so each row lights up for its physical input. */
     pressedInputs(gamepad, userSettings) {
         const pressed = new Set();

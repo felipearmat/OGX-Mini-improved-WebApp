@@ -58,7 +58,7 @@
             <div class="updateNotice hidden" id="updateNotice"></div>
             <div class="firmwareWarning hidden" id="firmwareWarning">
                 <strong>The adapter did not answer some requests.</strong>
-                Its firmware may be older than this page, or it is not in Web App mode (hold Start + LB + RB
+                Its firmware may be older than this page, or it is not in D-Input/Debug mode (hold Start + LB + RB
                 for 3 s). Profiles, axis settings and button mappings work as usual, but without an answer:
                 <ul>
                     <li>Adapter Options, Bluetooth search, Mode Enabled, Rumble Test and the Mouse + Keyboard
@@ -68,7 +68,7 @@
                     <li>the green highlight follows the button each input is mapped to, not the controller's
                         own button.</li>
                 </ul>
-                If the adapter is in Web App mode, update its firmware to the latest version to use them.
+                If the adapter is in D-Input/Debug mode, update its firmware to the latest version to use them.
             </div>
             <div class="triPanel">
                 <div class="section">
@@ -82,6 +82,24 @@
                         <input type="checkbox" id="checkbox-modeCombo">
                         <label for="checkbox-modeCombo" id="label-modeCombo">Mode Enabled</label>
                         <div class="modeComboHint" id="modeComboHint"></div>
+                    </div>
+                    <div class="modeCombo modeColorRow hidden" id="modeColorRow">
+                        <button class="modeColorSwatch" id="button-modeColor" type="button" aria-label="Mode colour"></button>
+                        <span>Mode colour</span>
+                        <div class="modeComboHint" id="modeColorHint">Lightbar and RGB LED colour of this mode</div>
+                        <div class="modeColorPicker hidden" id="modeColorPicker">
+                            <div class="modeColorWheel">
+                                <canvas id="canvas-modeColor" width="180" height="180"></canvas>
+                                <span class="modeColorMarker" id="modeColorMarker"></span>
+                            </div>
+                            <div class="modeColorSide">
+                                <div class="modeColorValue" id="modeColorValue"></div>
+                                <div class="modeComboHint">Around the wheel: the colour. Towards the centre: lighter.</div>
+                                <button class="controlsButton" id="button-modeColorSave" type="button">Save colour</button>
+                                <button class="controlsButton" id="button-modeColorDefault" type="button">Default</button>
+                                <button class="controlsButton" id="button-modeColorCancel" type="button">Cancel</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="section">
@@ -318,6 +336,20 @@
             <div id="searchPanel" class="dongleOptionsPanel hidden">
                 <div id="searchInput" class="dongleOptionsInput"></div>
                 <div id="searchStatus" class="saveStatus" title="Saved by itself and applied right away (no restart).">Current Config</div>
+            </div>
+
+            <div class="togglePanelControl hidden" id="ledControl">
+                <div class="header">
+                    <h3>Status LED</h3>
+                </div>
+                <div class="buttonPanel">
+                    <button id="button-toggleLed">Hide</button>
+                </div>
+            </div>
+
+            <div id="ledPanel" class="dongleOptionsPanel hidden">
+                <div id="ledInput" class="dongleOptionsInput"></div>
+                <div id="ledStatus" class="saveStatus" title="Saved by itself and applied right away (no restart).">Current Config</div>
             </div>
 
             <div class="togglePanelControl hidden" id="diagnosticsControl">

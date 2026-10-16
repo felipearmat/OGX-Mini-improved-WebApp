@@ -1,5 +1,5 @@
 /*  What the adapter's hardware supports (OGX-Mini-improved firmware, UserSettings/Capabilities.h):
- *  USB Web App mode GET_CAPABILITIES (0x76, 32 bits little-endian), and over Bluetooth 4 bytes
+ *  USB (D-Input/Debug mode) GET_CAPABILITIES (0x76, 32 bits little-endian), and over Bluetooth 4 bytes
  *  after the dongle settings record. Until the adapter answers (older firmware never does) every
  *  option stays available, as before. Options the hardware can't use are turned off with a note. */
 export class Capabilities {
@@ -13,6 +13,11 @@ export class Capabilities {
     static IDLE_OFF = 1 << 7;
     static WIRED_INPUT = 1 << 8;
     static BLE_WEBAPP = 1 << 9;
+    static STATUS_LED_PICO = 1 << 10;       // the Pico board's own status LED (or its RGB LED)
+    static STATUS_LED_ESP32 = 1 << 11;      // the hybrid ESP32's status LED
+    static STATUS_LED_PICO_EXT = 1 << 12;   // an external RGB LED on the Pico (GP6)
+    static MODE_COLORS = 1 << 13;           // colour per output mode (USB only)
+    static STATUS_LED_ESP32_EXT = 1 << 14;  // an external RGB LED on the hybrid ESP32 (GPIO 4)
 
     static NOTE = "Not supported on this adapter's hardware.";
 

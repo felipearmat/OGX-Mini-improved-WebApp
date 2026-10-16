@@ -7,6 +7,8 @@ import { ModeView } from "../modeView.js";
 import { UIDongle } from "../uiDongle.js";
 import { KbmSettings } from "../kbmSettings.js";
 import { UIKbm } from "../uiKbm.js";
+import { UILed } from "../uiLed.js";
+import { PACKET_ID } from "./protocol.js";
 import { UIRumble } from "../uiRumble.js";
 import { UITouchpad } from "../uiTouchpad.js";
 import { UISearch } from "../uiSearch.js";
@@ -20,25 +22,6 @@ class USBManager {
     static #HEADER_LENGTH = Object.freeze(9);
     static #BAUDRATE = Object.freeze(9600); 
     static #BUFFER_LEN = Object.freeze(16384);  // diagnostics reports are a few KB
-
-    static #PACKET_ID = Object.freeze({
-        NONE: 0,
-        GET_PROFILE_BY_ID: 0x50,
-        GET_PROFILE_BY_IDX: 0x55,
-        SET_PROFILE_START: 0x60,
-        SET_PROFILE: 0x61,
-        GET_DONGLE_SETTINGS: 0x70,
-        SET_DONGLE_SETTINGS: 0x71,
-        GET_KBM_SETTINGS: 0x72,
-        SET_KBM_SETTINGS: 0x73,
-        GET_DIAGNOSTICS: 0x74,
-        GET_CAPABILITIES: 0x76,
-        GET_VERSION: 0x77,
-        SET_GP_IN: 0x80,
-        GP_TOUCH: 0x82,
-        SET_GP_OUT: 0x81,
-        RESP_ERROR: 0xFF
-    });
 
     static #PACKET_HEADER = Object.freeze([
         { key: "packetLen",   size: 1 },
@@ -77,7 +60,7 @@ class USBManager {
                     window.location.reload();
                 });
 
-                const ids = new Set(Object.values(USBManager.#PACKET_ID));
+                const ids = new Set(Object.values(PACKET_ID));
                 // A packet starts with its length (64) and a known ID; chunk fields in range.
                 const isPacketStart = (b) => b[0] === USBManager.#PACKET_LENGTH && ids.has(b[1]) &&
                     b[7] < Math.max(1, b[6]) && b[8] <= USBManager.#PACKET_LENGTH - USBManager.#HEADER_LENGTH;
@@ -94,7 +77,7 @@ class USBManager {
     }
 
     async saveProfile() {
-        let header = this.#headerFromUi(USBManager.#PACKET_ID.SET_PROFILE_START);
+        let header = this.#headerFromUi(PACKET_ID.SET_PROFILE_START);
         await this.#writeToDevice(
             header, 
             new Uint8Array([0xFF])
@@ -102,7 +85,7 @@ class USBManager {
         await this.#sleep(100);
 
         const data = this.#userSettings.getProfileBytes();
-        header.packetId = USBManager.#PACKET_ID.SET_PROFILE;
+        header.packetId = PACKET_ID.SET_PROFILE;
         await this.#writeToDevice(
             header, 
             data
@@ -110,7 +93,7 @@ class USBManager {
     }
 
     async getProfileById() {
-        let header = this.#headerFromUi(USBManager.#PACKET_ID.GET_PROFILE_BY_ID);
+        let header = this.#headerFromUi(PACKET_ID.GET_PROFILE_BY_ID);
         await this.#writeToDevice(
             header, 
             new Uint8Array([0xFF])
@@ -118,7 +101,7 @@ class USBManager {
     }
 
     async getProfileByIdx() {
-        let header = this.#headerFromUi(USBManager.#PACKET_ID.GET_PROFILE_BY_IDX);
+        let header = this.#headerFromUi(PACKET_ID.GET_PROFILE_BY_IDX);
         await this.#writeToDevice(
             header, 
             new Uint8Array([0xFF])
@@ -131,42 +114,60 @@ class USBManager {
 
     // Adapter options (OGX-Mini-improved firmware); older firmware ignores the request.
     async getDongleSettings() {
-        let header = this.#headerFromUi(USBManager.#PACKET_ID.GET_DONGLE_SETTINGS);
+        let header = this.#headerFromUi(PACKET_ID.GET_DONGLE_SETTINGS);
         await this.#writeToDevice(header, new Uint8Array([0xFF]));
     }
 
     // What the hardware supports (newer firmware); an older one does not answer.
     async getCapabilities() {
-        let header = this.#headerFromUi(USBManager.#PACKET_ID.GET_CAPABILITIES);
+        let header = this.#headerFromUi(PACKET_ID.GET_CAPABILITIES);
         await this.#writeToDevice(header, new Uint8Array([0xFF]));
     }
 
     // Versions (newer firmware): this firmware, the board, the hybrid's ESP32.
     async getVersion() {
-        let header = this.#headerFromUi(USBManager.#PACKET_ID.GET_VERSION);
+        let header = this.#headerFromUi(PACKET_ID.GET_VERSION);
         await this.#writeToDevice(header, new Uint8Array([0xFF]));
     }
 
     async saveDongleSettings() {
-        let header = this.#headerFromUi(USBManager.#PACKET_ID.SET_DONGLE_SETTINGS);
+        let header = this.#headerFromUi(PACKET_ID.SET_DONGLE_SETTINGS);
         await this.#writeToDevice(header, this.#dongleSettings.getBytes());
     }
 
     // Given bytes (the mode combo list alone: applied without a restart).
     async saveDongleBytes(bytes) {
-        let header = this.#headerFromUi(USBManager.#PACKET_ID.SET_DONGLE_SETTINGS);
+        let header = this.#headerFromUi(PACKET_ID.SET_DONGLE_SETTINGS);
         await this.#writeToDevice(header, bytes);
+    }
+
+    // Colour per output mode (newer firmware); an older one does not answer.
+    async getLedColors() {
+        let header = this.#headerFromUi(PACKET_ID.GET_LED_COLORS);
+        await this.#writeToDevice(header, new Uint8Array([0xFF]));
+    }
+
+    // Stored and applied right away; the adapter answers with the stored table.
+    async saveLedColors(bytes) {
+        let header = this.#headerFromUi(PACKET_ID.SET_LED_COLORS);
+        await this.#writeToDevice(header, bytes);
+    }
+
+    // A colour shown on the lightbar and the RGB LED while picking one (active false ends it).
+    async ledPreview(active, r, g, b) {
+        let header = this.#headerFromUi(PACKET_ID.LED_PREVIEW);
+        await this.#writeToDevice(header, new Uint8Array([active ? 1 : 0, r, g, b]));
     }
 
     // Mouse + keyboard mapping (OGX-Mini-improved firmware); older firmware ignores the request.
     async getKbmSettings() {
-        let header = this.#headerFromUi(USBManager.#PACKET_ID.GET_KBM_SETTINGS);
+        let header = this.#headerFromUi(PACKET_ID.GET_KBM_SETTINGS);
         await this.#writeToDevice(header, new Uint8Array([0xFF]));
     }
 
     // Applied right away; the adapter answers with the stored mapping.
     async saveKbmSettings() {
-        let header = this.#headerFromUi(USBManager.#PACKET_ID.SET_KBM_SETTINGS);
+        let header = this.#headerFromUi(PACKET_ID.SET_KBM_SETTINGS);
         await this.#writeToDevice(header, this.#kbmSettings.getBytes());
     }
 
@@ -182,14 +183,14 @@ class USBManager {
                 }
             }, 3000);
         });
-        let header = this.#headerFromUi(USBManager.#PACKET_ID.GET_DIAGNOSTICS);
+        let header = this.#headerFromUi(PACKET_ID.GET_DIAGNOSTICS);
         await this.#writeToDevice(header, new Uint8Array([0xFF]));
         return answer;
     }
 
     // Rumble test (OGX-Mini-improved firmware): left / right motor 0-255, duration in ms.
     async sendRumbleTest(left, right, durationMs) {
-        let header = this.#headerFromUi(USBManager.#PACKET_ID.SET_GP_OUT);
+        let header = this.#headerFromUi(PACKET_ID.SET_GP_OUT);
         await this.#writeToDevice(header, new Uint8Array([left, right, durationMs & 0xFF, (durationMs >> 8) & 0xFF]));
     }
 
@@ -233,24 +234,24 @@ class USBManager {
 
     #processPacketInData(header, bufferIn, dataLen) {
         switch (header.packetId) {
-            case USBManager.#PACKET_ID.GET_PROFILE_BY_IDX:   
+            case PACKET_ID.GET_PROFILE_BY_IDX:   
                 console.log("Received profile data.");
                 this.#userSettings.setProfileFromBytes(bufferIn.subarray(0, dataLen));
                 this.#userSettings.maxGamepads = header.maxGamepads;
                 this.#userSettings.playerIdx = header.playerIdx;
-                this.#userSettings.deviceMode = header.deviceMode;
+                this.#userSettings.deviceMode = header.deviceMode === 100 ? 6 : header.deviceMode;  // Web App mode = D-Input/Debug
                 UI.updateAll(this.#userSettings);
                 break;
 
-            case USBManager.#PACKET_ID.GET_PROFILE_BY_ID:
+            case PACKET_ID.GET_PROFILE_BY_ID:
                 console.log("Received profile data.");
                 this.#userSettings.setProfileFromBytes(bufferIn.subarray(0, dataLen));
                 this.#userSettings.maxGamepads = header.maxGamepads;
-                this.#userSettings.deviceMode = header.deviceMode;
+                this.#userSettings.deviceMode = header.deviceMode === 100 ? 6 : header.deviceMode;  // Web App mode = D-Input/Debug
                 UI.updateAll(this.#userSettings);
                 break; 
 
-            case USBManager.#PACKET_ID.GET_DONGLE_SETTINGS:
+            case PACKET_ID.GET_DONGLE_SETTINGS:
                 if (this.#dongleSettings && this.#dongleSettings.setFromBytes(bufferIn.slice(0, dataLen))) {
                     UIDongle.update(this.#dongleSettings);
                     UIDongle.setAvailable(true);
@@ -258,11 +259,12 @@ class USBManager {
                         UIDongle.refreshModeCombo();
                     }
                     UISearch.update(this.#dongleSettings);
+                    UILed.update(this.#dongleSettings);
                     UIRumble.setAvailable(true);  // same firmware generation
                 }
                 break;
 
-            case USBManager.#PACKET_ID.GET_VERSION: {
+            case PACKET_ID.GET_VERSION: {
                 const [version, board, companion] = new TextDecoder().decode(bufferIn.slice(0, dataLen)).split("\0");
                 if (board) {
                     UI.setSubheaderText(board);  // e.g. ESP32_BLUEPAD32_I2C_PICO2
@@ -271,11 +273,18 @@ class USBManager {
                 break;
             }
 
-            case USBManager.#PACKET_ID.GET_CAPABILITIES:
+            case PACKET_ID.GET_LED_COLORS:
+                UILed.setColors(bufferIn.slice(0, dataLen));
+                break;
+
+            case PACKET_ID.LED_PREVIEW:
+                break;
+
+            case PACKET_ID.GET_CAPABILITIES:
                 capabilities.setFromBytes(bufferIn.slice(0, dataLen));
                 break;
 
-            case USBManager.#PACKET_ID.GET_KBM_SETTINGS:
+            case PACKET_ID.GET_KBM_SETTINGS:
                 if (this.#kbmSettings && this.#kbmSettings.setFromBytes(bufferIn.slice(0, dataLen))) {
                     UIKbm.update(this.#kbmSettings);
                     UIKbm.setAvailable(true);
@@ -283,7 +292,7 @@ class USBManager {
                 }
                 break;
 
-            case USBManager.#PACKET_ID.GET_DIAGNOSTICS: {
+            case PACKET_ID.GET_DIAGNOSTICS: {
                 let report = null;
                 try {
                     report = JSON.parse(new TextDecoder().decode(bufferIn.slice(0, dataLen)));
@@ -297,15 +306,15 @@ class USBManager {
                 break;
             }
 
-            case USBManager.#PACKET_ID.SET_GP_OUT:
+            case PACKET_ID.SET_GP_OUT:
                 UIRumble.setStatus(`Sent (${new Date().toLocaleTimeString()}).`);
                 break;
 
-            case USBManager.#PACKET_ID.GP_TOUCH:
+            case PACKET_ID.GP_TOUCH:
                 UITouchpad.draw(bufferIn.subarray(0, dataLen));
                 break;
 
-            case USBManager.#PACKET_ID.SET_GP_IN:
+            case PACKET_ID.SET_GP_IN:
                 const gamepad = new Gamepad();
                 gamepad.setReportFromBytes(bufferIn.subarray(0, dataLen));
                 UI.drawGamepadInput(gamepad, this.#userSettings);
@@ -407,6 +416,7 @@ export const USB = {
         const dongleSettings = new DongleSettings();
         UIDongle.init(dongleSettings);
         UISearch.init(dongleSettings);
+        UILed.init(dongleSettings);
         const kbmSettings = new KbmSettings();
         UIKbm.init(kbmSettings);
         const usbManager = new USBManager();
@@ -427,6 +437,9 @@ export const USB = {
             // No answer (older firmware) within 1.5 s: warn what will not work as expected.
             setTimeout(() => ModeView.setFirmwareWarning(!dongleSettings.storedBytes), 1500);
             await usbManager.getKbmSettings();
+            await usbManager.getLedColors();
+            UILed.initModeColor((active, r, g, b) => usbManager.ledPreview(active, r, g, b),
+                (bytes) => usbManager.saveLedColors(bytes));
 
             UI.updateAll(userSettings);
             UI.toggleConnected(true);

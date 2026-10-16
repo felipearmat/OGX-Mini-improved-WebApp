@@ -7,11 +7,11 @@
  *  Uses its own "modeHidden" class, so the sections' Show / Hide buttons keep working. */
 export const ModeView = {
     KBM_MODE: 17,
-    WEBAPP_MODE: 100,
+    DEBUG_MODE: 6,  // D-Input/Debug: the mode the web app connects in
     // Output modes whose host rumble reaches the controller (firmware device drivers that fill
-    // PadOut rumble): Xbox OG, Steel Battalion, XInput, PS3, Switch, PS4, STEAM; and Web App
-    // mode itself, where the test runs.
-    RUMBLE_MODES: new Set([1, 2, 4, 5, 8, 15, 16, 100]),
+    // PadOut rumble): Xbox OG, Steel Battalion, XInput, PS3, Switch, PS4, STEAM; and D-Input/Debug
+    // itself, where the test runs.
+    RUMBLE_MODES: new Set([1, 2, 4, 5, 6, 8, 15, 16]),
 
     GAMEPAD_SECTIONS: [
         "axisSettingsControl", "axisSettingsPanel",
@@ -22,11 +22,11 @@ export const ModeView = {
     KBM_OWN_BUTTONS: ["button-saveKbmOptions", "button-restoreKbmOptions"],
     RUMBLE_SECTIONS: ["rumbleTestControl", "rumbleTestPanel"],
     // Modes that use a DS4 / DualSense touchpad: PS4, STEAM, Mouse + Keyboard (pointer), and
-    // Web App mode (generic: shows what the adapter reads).
-    TOUCHPAD_MODES: new Set([15, 16, 17, 100]),
+    // D-Input/Debug (generic: shows what the adapter reads).
+    TOUCHPAD_MODES: new Set([6, 15, 16, 17]),
     TOUCHPAD_SECTIONS: ["touchpadControl", "touchpadPanel"],
 
-    mode: 100,
+    mode: 6,
     kbmAvailable: false,
     listeners: [],
 

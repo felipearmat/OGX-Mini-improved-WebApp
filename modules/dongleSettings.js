@@ -11,7 +11,7 @@
  *  connected, two 12-bit second counts (full search = bits 0-11, reduced search = bits 12-23),
  *  0-600 s; 4095 for the reduced search = no limit. Applied without a restart.
  *  Bytes 12-15 (version 2): output modes whose button combo is off, a little-endian bit mask
- *  (bit n = device mode n); zero turns every combo on. Web App mode (100) is always on. Saving a
+ *  (bit n = device mode n); zero turns every combo on. D-Input/Debug's Start + LB + RB is always on. Saving a
  *  change of the mask alone applies it right away, without a restart.
  *  Version 4, byte 16: minutes without input before a Bluetooth controller is turned off
  *  (0 = never). Applied without a restart.
@@ -19,14 +19,20 @@
  *  ESP32 hybrid). Applied without a restart, so it sits in the Bluetooth config panel (panel:
  *  "bluetooth") and is saved live. Each option names the capability it needs (capabilities.js);
  *  the panel turns it off when the hardware lacks it.
+ *  Version 6, bytes 18-22: the status LEDs (panel "led", Status LED panel, saved live): the
+ *  Pico's LED, an external RGB LED on the Pico, the hybrid ESP32's LED and an external RGB LED on
+ *  the ESP32 on (0 / 1), then the RGB LEDs' brightness (1-255).
  */
 import { Capabilities } from "./capabilities.js";
 
 export class DongleSettings {
-    static VERSION = Object.freeze(5);
+    static VERSION = Object.freeze(6);
     static SEARCH_MAX_S = Object.freeze(600);
     static SEARCH_NO_LIMIT = Object.freeze(0xFFF);
-    static LENGTH = Object.freeze(18);
+    static LENGTH = Object.freeze(23);
+    static V5_LENGTH = Object.freeze(18);
+    static BRIGHTNESS_OFFSET = Object.freeze(22);
+    static BRIGHTNESS_DEFAULT = Object.freeze(48);
     static V4_LENGTH = Object.freeze(17);
     static V3_LENGTH = Object.freeze(16);
     static IDLE_OFFSET = Object.freeze(16);
@@ -83,6 +89,26 @@ export class DongleSettings {
             tip: "Range: a stronger radio reaches controllers further away, for a little more power.",
             help: "+9 dBm instead of +3 dBm (RP2040 + ESP32 adapter).",
         },
+        {
+            key: "statusLedPico", offset: 18, since: 6, capability: Capabilities.STATUS_LED_PICO, panel: "led",
+            label: "Pico LED", defaultValue: 1,
+            tip: "The Pico board's own LED (or its RGB LED, on boards that have one): the mode's blink code at boot, then blinking while searching for controllers. On a Pico W / Pico 2 W in the RP2040 + ESP32 adapter it stays dark: it is wired to the radio chip, which that adapter leaves off.",
+        },
+        {
+            key: "statusLedPicoExt", offset: 19, since: 6, capability: Capabilities.STATUS_LED_PICO_EXT, panel: "led",
+            label: "External LED on the Pico (GP6)", defaultValue: 1,
+            tip: "An RGB LED (WS2812B) on GP6 of a Pico 2 / Pico 2 W, in the mode colour.",
+        },
+        {
+            key: "statusLedEsp32", offset: 20, since: 6, capability: Capabilities.STATUS_LED_ESP32, panel: "led",
+            label: "ESP32 LED", defaultValue: 1,
+            tip: "The ESP32 board's LED on the RP2040 + ESP32 adapter.",
+        },
+        {
+            key: "statusLedEsp32Ext", offset: 21, since: 6, capability: Capabilities.STATUS_LED_ESP32_EXT, panel: "led",
+            label: "External LED on the ESP32 (GPIO 4)", defaultValue: 1,
+            tip: "An RGB LED (WS2812B) on GPIO 4 of the ESP32 (RP2040 + ESP32 adapter), in the mode colour.",
+        },
     ]);
 
     static COMBO_MASK_OFFSET = Object.freeze(12);
@@ -94,14 +120,13 @@ export class DongleSettings {
         3: "Start + LB + D-pad Right",
         4: "Start + D-pad Up",
         5: "Start + D-pad Left",
-        6: "Start + RB + D-pad Left",
+        6: "Start + LB + RB (always on) or Start + RB + D-pad Left",
         7: "Start + A",
         8: "Start + D-pad Down",
         9: "Start + LB + D-pad Down",
         15: "Start + LB + D-pad Left",
         16: "Start + LB + D-pad Up",
         17: "Start + RB + D-pad Up",
-        100: "Start + LB + RB",
     });
 
     constructor() {
@@ -117,11 +142,19 @@ export class DongleSettings {
         this.values.reducedSearchSeconds = DongleSettings.SEARCH_NO_LIMIT;
         // Version 4: idle turn-off, saved live too.
         this.values.idleOffMinutes = 15;
+        // Version 6: the RGB status LED's brightness, saved live (Status LED panel).
+        this.values.statusLedBrightness = DongleSettings.BRIGHTNESS_DEFAULT;
+        for (const option of DongleSettings.OPTIONS) {
+            if (option.defaultValue !== undefined) {
+                this.values[option.key] = option.defaultValue;
+            }
+        }
     }
 
     // Record length of a version.
     static lengthOf(version) {
-        return version >= 5 ? DongleSettings.LENGTH : version >= 4 ? DongleSettings.V4_LENGTH
+        return version >= 6 ? DongleSettings.LENGTH : version >= 5 ? DongleSettings.V5_LENGTH
+            : version >= 4 ? DongleSettings.V4_LENGTH
             : version >= 2 ? DongleSettings.V3_LENGTH : DongleSettings.V1_LENGTH;
     }
 
@@ -151,6 +184,9 @@ export class DongleSettings {
         if (version >= 4) {
             this.values.idleOffMinutes = bytes[DongleSettings.IDLE_OFFSET];
         }
+        if (version >= 6) {
+            this.values.statusLedBrightness = bytes[DongleSettings.BRIGHTNESS_OFFSET] || DongleSettings.BRIGHTNESS_DEFAULT;
+        }
         const o = DongleSettings.COMBO_MASK_OFFSET;
         this.comboDisabledModes = version >= 2 ? (bytes[o] | (bytes[o + 1] << 8) | (bytes[o + 2] << 16) | (bytes[o + 3] << 24)) >>> 0 : 0;
         this.storedBytes = bytes.slice(0, DongleSettings.lengthOf(version));
@@ -173,8 +209,13 @@ export class DongleSettings {
     // The settings as stored on the adapter with only the live ones changed — mode combos and
     // search times, which the adapter applies without a restart. Unsaved edits in the Adapter
     // Options panel are left out.
+    // Null until the adapter's record was read and understood: a record built from defaults would
+    // change options that need a restart, and the adapter would restart.
     liveBytes() {
-        const bytes = new Uint8Array(this.storedBytes || this.getBytes());
+        if (!this.storedBytes) {
+            return null;
+        }
+        const bytes = new Uint8Array(this.storedBytes);
         this.#writeMask(bytes);
         if (this.version >= 3) {
             this.#writeSearchTimes(bytes);
@@ -184,12 +225,21 @@ export class DongleSettings {
         return bytes;
     }
 
-    // Options shown in the Bluetooth config panel: the adapter applies them without a restart.
+    // Options shown in the Bluetooth config and Status LED panels: the adapter applies them
+    // without a restart.
     #writeLiveOptions(bytes) {
         for (const option of this.availableOptions()) {
-            if (option.panel === "bluetooth" && bytes.length > option.offset) {
+            if (option.panel && bytes.length > option.offset) {
                 bytes[option.offset] = this.values[option.key] ? 1 : 0;
             }
+        }
+        this.#writeBrightness(bytes);
+    }
+
+    #writeBrightness(bytes) {
+        if (this.version >= 6 && bytes.length > DongleSettings.BRIGHTNESS_OFFSET) {
+            const v = Math.round(Number(this.values.statusLedBrightness) || DongleSettings.BRIGHTNESS_DEFAULT);
+            bytes[DongleSettings.BRIGHTNESS_OFFSET] = Math.min(255, Math.max(1, v));
         }
     }
 
@@ -231,6 +281,7 @@ export class DongleSettings {
         }
         this.#writeMask(bytes);
         this.#writeIdle(bytes);
+        this.#writeBrightness(bytes);
         return bytes;
     }
 }

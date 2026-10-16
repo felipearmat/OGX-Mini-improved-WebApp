@@ -104,7 +104,8 @@ export const UIDongle = {
     },
 
     /*  The checkbox under the Device Mode dropdown: whether the button combo may switch to the
-     *  selected mode. Saved right away (saveFunc(bytes)); Web App mode always keeps its combo. */
+     *  selected mode. Saved right away (saveFunc(bytes)); D-Input/Debug's Start + LB + RB always stays
+     *  on (the way back to the web app), the box turns its other combo off. */
     /*  Live settings (mode combos, Bluetooth search times): the adapter applies them without a
      *  restart, so they are saved by themselves, once the changes stop for a moment. */
     liveSave: null,
@@ -113,7 +114,10 @@ export const UIDongle = {
 
     setLiveSave(dongleSettings, saveFunc) {
         this.liveSave = async () => {
-            const bytes = dongleSettings.liveBytes();
+            const bytes = dongleSettings.liveBytes();  // null before the adapter's record is read
+            if (!bytes) {
+                return;
+            }
             await saveFunc(bytes);
             dongleSettings.storedBytes = bytes;
         };
@@ -146,19 +150,19 @@ export const UIDongle = {
         if (!row || !box || !dropdown) {
             return;
         }
-        const WEBAPP = 100;
+        const DEBUG = 6;
         const hint = document.getElementById("modeComboHint");
         const show = () => {
             // Only once the adapter answered with a record that has the combo list.
             row.classList.toggle("hidden", !dongleSettings.storedBytes || dongleSettings.version < 2);
             const mode = Number(dropdown.value);
             box.checked = dongleSettings.comboEnabled(mode);
-            box.disabled = mode === WEBAPP;
+
             label.textContent = "Mode Enabled";
             const combo = DongleSettings.MODE_COMBOS[mode];
             if (hint) {
                 hint.textContent = combo
-                    ? `${combo} (hold 3 s)${mode === WEBAPP ? ", always on: the way back to the web app" : ""}`
+                    ? `${combo} (hold 3 s)${mode === DEBUG ? "; Start + LB + RB is the way back to the web app" : ""}`
                     : "No combo for this mode";
             }
         };

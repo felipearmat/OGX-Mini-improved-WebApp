@@ -1,0 +1,35 @@
+# Web app tests (Node's own test runner, no dependencies) and the firmware contract: the copy in
+# tests/contract/ must match the firmware's (Firmware/common/contract/webapp_contract.json on the
+# firmware's master), so a change on either side that the other did not follow fails here.
+name: Web app CI
+
+on:
+  push:
+    branches: ["master", "main"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Unit and contract tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Tests
+        run: npm test
+      - name: Contract copy matches the firmware
+        run: |
+          curl -fsSL --retry 5 -o /tmp/firmware_contract.json \
+            https://raw.githubusercontent.com/felipearmat/OGX-Mini-improved/master/Firmware/common/contract/webapp_contract.json
+          diff -u /tmp/firmware_contract.json tests/contract/webapp_contract.json || {
+            echo "tests/contract/webapp_contract.json differs from the firmware's: copy it and follow the change."
+            exit 1
+          }

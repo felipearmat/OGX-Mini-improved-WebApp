@@ -86,10 +86,24 @@ and a secure context, which `localhost` is.
 
 On Windows, `start.bat` does the same.
 
+## Tests
+
+```sh
+npm test            # Node 20+, no dependencies (node:test)
+```
+
+`tests/contract.test.js` checks the page's constants (packet IDs, mode values, capability bits,
+the Adapter Options record and how every older version reads, the default colours) against
+`tests/contract/webapp_contract.json`, a copy of the file the firmware writes from its own code
+(`Firmware/common/contract/webapp_contract.json` in OGX-Mini-improved). CI fails when the copy
+differs from the firmware's: copy the new file and follow the change. The other tests cover the
+Adapter Options record (live saves change only the live options, never on top of an unread
+record) and the mode colours.
+
 ## Connecting
 
 - **USB**: plug the adapter in and hold **Start + Left Bumper + Right Bumper** for 3 seconds to
-  enter web app mode, then click **Connect via USB**.
+  enter D-Input/Debug mode, then click **Connect via USB**.
 - **Bluetooth** (Pico W / Pico 2 W): click **Connect via Bluetooth** and pick the adapter.
 
 ## Protocol notes (Adapter Options)

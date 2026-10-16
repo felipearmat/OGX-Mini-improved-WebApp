@@ -459,6 +459,99 @@ select:disabled {
     opacity: 0.8;
 }
 
+/* Mode colour (modules/uiLed.js): a swatch under the Device Mode dropdown and a colour wheel. */
+.modeColorRow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+}
+
+.modeColorRow > .modeComboHint {
+    flex-basis: 100%;
+}
+
+.modeColorSwatch {
+    width: 28px;
+    height: 18px;
+    padding: 0;
+    border: 1px solid rgba(0, 0, 0, 0.35);
+    border-radius: 9px;
+    background: var(--swatch, #fff);
+    box-shadow: 0 0 6px var(--swatch, transparent);
+    cursor: pointer;
+}
+
+.modeColorSwatch:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.modeColorPicker {
+    flex-basis: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.modeColorPicker.hidden {
+    display: none;
+}
+
+.modeColorWheel {
+    position: relative;
+    width: 180px;
+    max-width: 100%;
+    aspect-ratio: 1;
+    touch-action: none;
+}
+
+.modeColorWheel canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    cursor: crosshair;
+}
+
+.modeColorMarker {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    margin: -7px 0 0 -7px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+}
+
+.modeColorSide {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.modeColorValue {
+    font-variant-numeric: tabular-nums;
+    padding-left: 22px;
+    position: relative;
+}
+
+.modeColorValue::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    margin-top: -7px;
+    border-radius: 50%;
+    background: var(--swatch, transparent);
+    box-shadow: 0 0 6px var(--swatch, transparent);
+}
+
 /* Touchpad panel (modules/uiTouchpad.js). */
 #canvasTouchpad {
     display: block;

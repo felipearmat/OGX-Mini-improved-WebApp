@@ -1,7 +1,7 @@
 /*  "Diagnostics" panel (OGX-Mini-improved firmware, USB). Shows what the adapter measures for
  *  each controller (identity, link, reports per second, late and lost reports, largest gap
  *  between reports, signal and channels in use), the summary of the previous session (the mode
- *  used for playing, before the reboot into Web App mode) and saves a log report (a JSON file) to send when asking for help:
+ *  used for playing, before the reboot into D-Input/Debug mode) and saves a log report (a JSON file) to send when asking for help:
  *  the adapter's report (board, firmware, mode, controllers, recent events) plus the web app's
  *  view of the settings and the browser. */
 export const UIDiagnostics = {
