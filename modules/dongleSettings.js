@@ -121,7 +121,7 @@ export class DongleSettings {
         3: "Start + LB + D-pad Right",
         4: "Start + D-pad Up",
         5: "Start + D-pad Left",
-        6: "Start + LB + RB or Start + RB + D-pad Left",
+        6: "Start + RB + D-pad Left",
         7: "Start + A",
         8: "Start + D-pad Down",
         9: "Start + LB + D-pad Down",

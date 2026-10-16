@@ -102,7 +102,7 @@ record) and the mode colours.
 
 ## Connecting
 
-- **USB**: plug the adapter in and hold **Start + Left Bumper + Right Bumper** for 3 seconds to
+- **USB**: plug the adapter in and hold **Start + Right Bumper + D-pad Left** for 3 seconds to
   enter D-Input/Debug mode, then click **Connect via USB**.
 - **Bluetooth** (Pico W / Pico 2 W): click **Connect via Bluetooth** and pick the adapter.
 
