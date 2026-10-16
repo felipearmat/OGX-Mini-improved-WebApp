@@ -25,9 +25,30 @@ export const test = base.extend({
     },
 
     page: async ({ page, adapter }, use) => {
-        const push = (script, arg) => page.evaluate(script, arg).catch(() => {});  // dropped while the page reloads
-        adapter.onData = (data) => push((b64) => window.__ogxmSerialPush(b64), data.toString("base64"));
-        adapter.onLost = () => push(() => window.__ogxmSerialLost());
+        // Bytes from the adapter go to the page in order, one evaluate at a time: what arrives
+        // meanwhile is joined into the next one (a call per chunk queues up on a slow machine).
+        // Dropped while the page reloads, like bytes on a USB disconnect.
+        let pending = [];
+        let sending = null;
+        const flush = () => {
+            if (sending || pending.length === 0) {
+                return sending;
+            }
+            const data = Buffer.concat(pending).toString("base64");
+            pending = [];
+            sending = page.evaluate((b64) => window.__ogxmSerialPush(b64), data)
+                .catch(() => {})
+                .then(() => { sending = null; return flush(); });
+            return sending;
+        };
+        adapter.onData = (data) => {
+            pending.push(data);
+            flush();
+        };
+        adapter.onLost = async () => {
+            await flush();  // what was sent before the device went away arrives first
+            await page.evaluate(() => window.__ogxmSerialLost()).catch(() => {});
+        };
         await page.exposeBinding("__ogxmSerial", async (_source, message) => {
             switch (message.op) {
                 case "open":
