@@ -18,6 +18,15 @@ test("shows only the LED options this board has", async ({ page }) => {
     await expect(row("statusLedEsp32Ext")).toHaveClass(/unsupported/);
 });
 
+test("no controller: the adapter sends no live input", async ({ page, adapter }) => {
+    await connect(page);
+    await page.waitForTimeout(1000);  // the answers to the connect requests are in
+    const before = adapter.bytesOut;
+    await page.waitForTimeout(2000);
+    // One neutral state when the port opened, then nothing (it was about 70 packets a second).
+    expect(adapter.bytesOut - before).toBeLessThan(64 * 4);
+});
+
 test("D-Input/Debug's mode combo can't be turned off", async ({ page }) => {
     await connect(page);
     await expect(page.locator("#checkbox-modeCombo")).toBeChecked();

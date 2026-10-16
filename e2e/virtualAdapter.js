@@ -17,6 +17,7 @@ export class VirtualAdapter {
         this.child = null;
         this.mode = null;     // output mode of the running process
         this.led = null;      // the external status LED's colour, "rrggbb"
+        this.bytesOut = 0;    // bytes the adapter sent to the page
         this.portOpen = false;
         this.restarts = 0;
         this.bootloader = false;
@@ -37,6 +38,7 @@ export class VirtualAdapter {
         this.child = child;
         child.stdout.on("data", (data) => {
             if (this.child === child && this.portOpen && this.onData) {
+                this.bytesOut += data.length;
                 this.onData(data);
             }
         });
