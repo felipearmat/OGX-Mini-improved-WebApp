@@ -16,6 +16,7 @@ export const PACKET_ID = Object.freeze({
     GET_LED_COLORS: 0x78,
     SET_LED_COLORS: 0x79,
     LED_PREVIEW: 0x7A,
+    GET_LOG: 0x7B,
     SET_GP_IN: 0x80,
     GP_TOUCH: 0x82,
     SET_GP_OUT: 0x81,

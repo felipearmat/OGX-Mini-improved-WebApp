@@ -129,6 +129,13 @@ export class VirtualAdapter {
         }
     }
 
+    // A line of the ESP32's serial output, into the adapter's kept log (as the hybrid keeps it).
+    log(text) {
+        if (this.child) {
+            this.child.stdio[3].write(`L${text}\n`);
+        }
+    }
+
     // Waits until the external status LED shows the colour ("rrggbb").
     async waitLed(rgb, timeoutMs = 5000) {
         const deadline = Date.now() + timeoutMs;

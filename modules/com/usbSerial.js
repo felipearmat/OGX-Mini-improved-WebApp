@@ -43,6 +43,7 @@ class USBManager {
     #dongleSettings = null;
     #kbmSettings = null;
     #diagnosticsResolve = null;
+    #logResolve = null;
 
     constructor() {
         this.#interface = new USBInterface();
@@ -188,6 +189,41 @@ class USBManager {
         return answer;
     }
 
+    // The adapter's kept log (newer firmware, GET_LOG): its diagnostics events and the hybrid's
+    // ESP32 output, oldest first. Resolves with the text, or null without an answer.
+    async getKeptLog() {
+        let since = 0;
+        let text = "";
+        for (let i = 0; i < 32; i++) {  // 2 KB per answer; the adapter keeps up to 32 KB
+            const answer = new Promise((resolve) => {
+                this.#logResolve = resolve;
+                setTimeout(() => {
+                    if (this.#logResolve === resolve) {
+                        this.#logResolve = null;
+                        resolve(null);
+                    }
+                }, 2000);
+            });
+            let header = this.#headerFromUi(PACKET_ID.GET_LOG);
+            const position = new Uint8Array(4);
+            new DataView(position.buffer).setUint32(0, since, true);
+            await this.#writeToDevice(header, position);
+            const data = await answer;
+            if (!data || data.length < 8) {
+                return i === 0 ? null : text;
+            }
+            const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+            const start = view.getUint32(0, true);
+            const total = view.getUint32(4, true);
+            text += new TextDecoder().decode(data.subarray(8));
+            since = (start + data.length - 8) >>> 0;
+            if (since === total || data.length === 8) {
+                break;
+            }
+        }
+        return text;
+    }
+
     // Rumble test (OGX-Mini-improved firmware): left / right motor 0-255, duration in ms.
     async sendRumbleTest(left, right, durationMs) {
         let header = this.#headerFromUi(PACKET_ID.SET_GP_OUT);
@@ -305,6 +341,13 @@ class USBManager {
                 }
                 break;
             }
+
+            case PACKET_ID.GET_LOG:
+                if (this.#logResolve) {
+                    this.#logResolve(bufferIn.slice(0, dataLen));
+                    this.#logResolve = null;
+                }
+                break;
 
             case PACKET_ID.SET_GP_OUT:
                 UIRumble.setStatus(`Sent (${new Date().toLocaleTimeString()}).`);
@@ -468,7 +511,7 @@ export const USB = {
                 adapter_options: dongleSettings.version ? { version: dongleSettings.version, ...dongleSettings.values } : null,
                 capabilities: capabilities.known ? `0x${capabilities.mask.toString(16)}` : null,
                 mouse_keyboard_mapping: Array.from(kbmSettings.getBytes()),
-            }));
+            }), () => usbManager.getKeptLog());
             UIDiagnostics.setAvailable(true);
             UITouchpad.initToggle();
 

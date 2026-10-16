@@ -9,7 +9,8 @@ export const UIDiagnostics = {
 
     // requestFunc() resolves with the adapter's report object, or null if it did not answer.
     // extraFunc() returns the web app side of the report (settings, profile...).
-    init(requestFunc, extraFunc) {
+    // logFunc(), optional (USB), resolves with the adapter's kept log text, or null.
+    init(requestFunc, extraFunc, logFunc = null) {
         if (this.built) {
             return;
         }
@@ -27,12 +28,15 @@ export const UIDiagnostics = {
         document.getElementById("button-diagRefresh").addEventListener("click", refresh);
         document.getElementById("button-diagReport").addEventListener("click", async () => {
             const report = await refresh();
+            const keptLog = logFunc ? await logFunc() : null;
             const file = {
                 generated_at: new Date().toISOString(),
                 web_app: window.location.href,
                 browser: navigator.userAgent,
                 adapter: report,  // null when the firmware did not answer
                 web_app_view: extraFunc(),
+                // The adapter's kept log, one line per entry: [rp] events, [esp] the hybrid's ESP32.
+                kept_log: keptLog === null ? null : keptLog.split("\n").filter((line) => line),
             };
             const blob = new Blob([JSON.stringify(file, null, 2)], { type: "application/json" });
             const link = document.createElement("a");
