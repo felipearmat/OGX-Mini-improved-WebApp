@@ -89,7 +89,9 @@ On Windows, `start.bat` does the same.
 ## Tests
 
 ```sh
-npm test            # Node 20+, no dependencies (node:test)
+npm test            # unit and contract tests: Node 20+, no dependencies (node:test)
+npm ci && npx playwright install chromium
+npm run e2e         # end-to-end tests (Playwright, Chromium)
 ```
 
 `tests/contract.test.js` checks the page's constants (packet IDs, mode values, capability bits,
@@ -100,6 +102,21 @@ differs from the firmware's: copy the new file and follow the change. The other 
 Adapter Options record (live saves change only the live options, never on top of an unread
 record) and the mode colours.
 
+The end-to-end tests (`e2e/`) run the page in Chromium against the firmware's **virtual adapter**:
+the firmware's own web app protocol and settings code built for the computer
+(`Firmware/RP2040/tests/virtual_adapter` in OGX-Mini-improved, see its `docs/TESTING.md`), with
+`navigator.serial` replaced by a port wired to that process (`e2e/fakeSerial.js`). A restart of the
+adapter is a USB disconnect for the page, and the adapter comes back with its settings, as the
+board does. They cover connecting, profiles saved across a restart, a mode change away from
+D-Input/Debug and its combo back, live options without a restart, an option that needs one, the
+status LEDs and mode colours (checked on the adapter's LED), the mouse + keyboard mapping and the
+diagnostics panel and report.
+
+The setup builds the virtual adapter from `../OGX-Mini-improved` (CMake and a C++20 compiler; the
+`libfixmath` and `tinyusb` submodules); `OGXM_FIRMWARE_DIR` names another checkout and
+`OGXM_VIRTUAL_ADAPTER` an already built binary. CI runs them against the firmware's master, and the
+firmware's CI runs them against this repository's master.
+
 ## Connecting
 
 - **USB**: plug the adapter in and hold **Start + Right Bumper + D-pad Left** for 3 seconds to
@@ -108,13 +125,15 @@ record) and the mode colours.
 
 ## Protocol notes (Adapter Options)
 
-18 bytes: a version byte (5), then one byte per option (0 / 1) in bytes 1-6 and 8 (byte 7 is
+23 bytes: a version byte (6), then one byte per option (0 / 1) in bytes 1-6 and 8 (byte 7 is
 unused); bytes 9-11 hold the two search times as 12-bit second counts (full = bits 0-11,
 reduced = bits 12-23, 4095 = no limit); bytes 12-15 the mode combo mask; byte 16 the idle
-turn-off time (minutes, 0 = never; version 4); byte 17 the higher transmit power (version 5).
-Older firmware answers with version 4 (17 bytes), 3 (16 bytes), 2 (byte 7 = single controller,
-no search times) or 1 (the first 8 bytes); the page then shows only those options and saves in
-that format.
+turn-off time (minutes, 0 = never; version 4); byte 17 the higher transmit power (version 5);
+bytes 18-21 the status LEDs (Pico, Pico external, ESP32, ESP32 external) and byte 22 the RGB
+LEDs' brightness (0 = the default, 48; version 6).
+Older firmware answers with version 5 (18 bytes), 4 (17 bytes), 3 (16 bytes), 2 (byte 7 = single
+controller, no search times) or 1 (the first 8 bytes); the page then shows only those options and
+saves in that format.
 USB: packets `GET_DONGLE_SETTINGS` (0x70) and `SET_DONGLE_SETTINGS` (0x71). Bluetooth:
 characteristic `12345678-1234-1234-1234-123456789060` (read / write). Firmware side:
 `Firmware/RP2040/src/Custom/DongleSettings.h`.

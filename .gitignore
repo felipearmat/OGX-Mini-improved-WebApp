@@ -1,1 +1,5 @@
 .ignore
+node_modules/
+e2e/.build/
+test-results/
+playwright-report/

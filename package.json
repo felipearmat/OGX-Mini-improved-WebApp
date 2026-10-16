@@ -2,11 +2,15 @@
   "name": "ogx-mini-improved-webapp",
   "private": true,
   "type": "module",
-  "description": "OGX-Mini-improved web app: a static page, no build step. The tests use only Node's own test runner.",
+  "description": "OGX-Mini-improved web app: a static page, no build step. Unit tests use Node's own test runner; the end-to-end tests (e2e/) use Playwright against the firmware's virtual adapter.",
   "scripts": {
-    "test": "node --test \"tests/*.test.js\""
+    "test": "node --test \"tests/*.test.js\"",
+    "e2e": "playwright test"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1"
   }
 }

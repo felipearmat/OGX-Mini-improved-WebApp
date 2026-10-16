@@ -1,6 +1,8 @@
 # Web app tests (Node's own test runner, no dependencies) and the firmware contract: the copy in
 # tests/contract/ must match the firmware's (Firmware/common/contract/webapp_contract.json on the
 # firmware's master), so a change on either side that the other did not follow fails here.
+# End-to-end: the page in Chromium against the firmware's virtual adapter, built from the
+# firmware's master (e2e/).
 name: Web app CI
 
 on:
@@ -33,3 +35,37 @@ jobs:
             echo "tests/contract/webapp_contract.json differs from the firmware's: copy it and follow the change."
             exit 1
           }
+
+  e2e:
+    name: End-to-end tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: felipearmat/OGX-Mini-improved
+          ref: master
+          path: firmware
+      - name: Firmware submodules for the virtual adapter
+        working-directory: firmware
+        run: git submodule update --init --depth 1 Firmware/external/libfixmath Firmware/external/tinyusb
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Playwright
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: End-to-end tests
+        env:
+          OGXM_FIRMWARE_DIR: ${{ github.workspace }}/firmware
+        run: npm run e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7
