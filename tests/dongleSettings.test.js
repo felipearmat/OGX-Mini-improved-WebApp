@@ -67,3 +67,11 @@ test("a version 5 record has no LED options and is saved as version 5", () => {
     assert.equal(s.liveBytes().length, 18);
     assert.ok(!s.availableOptions().some((o) => o.panel === "led"));
 });
+
+test("D-Input/Debug can't be turned off", () => {
+    const s = record();
+    s.setComboEnabled(DongleSettings.DEBUG_MODE, false);
+    assert.equal(s.comboEnabled(DongleSettings.DEBUG_MODE), true);
+    s.comboDisabledModes = 1 << DongleSettings.DEBUG_MODE;  // a mask that says off
+    assert.equal(s.comboEnabled(DongleSettings.DEBUG_MODE), true);
+});

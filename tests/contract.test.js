@@ -99,7 +99,7 @@ test("the mode lists use the firmware's mode values, without the old Web App mod
             assert.ok(values.has(field.value), `${field.label} = ${field.value}`);
             assert.notEqual(field.value, contract.modes.WEBAPP, "the Web App mode is D-Input/Debug now");
         }
-        const debug = list.fields.find((f) => f.value === contract.modes.DINPUT);
+        const debug = list.fields.find((f) => f.value === contract.modes.DINPUT_DEBUG);
         assert.ok(debug && debug.label === "D-Input/Debug", "D-Input/Debug is in every list");
     }
     for (const mode of Object.keys(DongleSettings.MODE_COMBOS)) {
@@ -113,7 +113,7 @@ test("default colours match the firmware's palette", () => {
     assert.equal(COLOR_SLOTS, mc.slots);
     for (const [name, rgb] of Object.entries(mc.defaults)) {
         const value = contract.modes[name];
-        const slot = name === "WEBAPP" ? contract.modes.DINPUT : value;
+        const slot = name === "WEBAPP" ? contract.modes.DINPUT_DEBUG : value;
         assert.deepEqual(DEFAULT_COLORS[slot] || WHITE, rgb, `colour of ${name}`);
     }
 });

@@ -40,9 +40,9 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
 - **Mode combos on / off**: *Mode Enabled* under the Device Mode dropdown turns the selected
   mode's button combo on or off (saved by itself a moment after the last change, no restart; the
   combo itself is shown below it), so a game's button chords cannot switch the adapter by
-  accident. The Web App mode combo is always on. Stored in the Adapter Options
+  accident. D-Input/Debug, where the web app connects, is always on. Stored in the Adapter Options
   record, bytes 12-15 (bit mask by mode).
-- **Touchpad** (USB; PS4, STEAM, Mouse + Keyboard and Web App modes; first section of the
+- **Touchpad** (USB; PS4, STEAM, Mouse + Keyboard and D-Input/Debug modes; first section of the
   page): the DS4 / DualSense touchpad as the adapter reads it, a green ball per finger, and the
   *Touchpad press* mapping row. The press is the Misc button (also listed as "Misc / Touchpad
   press" in Digital Mappings), so it can be mapped like the other buttons and lights up while
@@ -51,7 +51,7 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
   of 4 bytes as the pads send them, then the click byte.
 - **Live input in the mappings**: each mapping row (D-pad, buttons, analog, Mouse + Keyboard)
   lights up green while its controller input is pressed — the controller's own button, whatever it
-  is mapped to (OGX-Mini-improved firmware sends unmapped input in Web App mode).
+  is mapped to (OGX-Mini-improved firmware sends unmapped input in D-Input/Debug mode while the web app is open).
 - **Rumble Test** (USB): plays a rumble on the connected controller the way a game asks for it —
   left (strong) motor, right (weak) motor or both, at a chosen strength (5-100 %) for a chosen time
   (0.1-5 s), plus Stop. USB packet `SET_GP_OUT` (0x81): left, right, duration in ms (uint16 LE);
@@ -59,10 +59,10 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
   advertising while a Bluetooth Classic controller (Joy-Con, DS4...) is connected. Shown only for
   device modes that pass a game's rumble to the controller (Xbox OG, Steel Battalion, XInput, PS3,
   Switch, PS4, STEAM, and Web App itself).
-- **Diagnostics** (USB, Web App mode): what the adapter measures for each controller — link
+- **Diagnostics** (USB, D-Input/Debug mode): what the adapter measures for each controller — link
   (Bluetooth Classic / LE interval, Bluetooth version, wired or 2.4 GHz receiver), reports per
   second, late and lost reports, largest gap, signal and radio channels in use — and the summary
-  of the session before the switch to Web App mode. **Generate log report** saves a JSON file
+  of the session before the switch to D-Input/Debug mode. **Generate log report** saves a JSON file
   (the adapter's report plus the browser and the web app's view of the settings) to send when
   asking for help. Shown only when the firmware answers (OGX-Mini-improved v1.1.0 or later).
 - Output modes added to the list: Wii U, PS4, STEAM (DualSense), Mouse + Keyboard.
@@ -125,7 +125,7 @@ When a connection fails, the page says why after it reloads (the USB port in use
 program, a browser without Web Serial / Web Bluetooth, the error text otherwise); closing the port
 chooser is not an error. Once connected over USB, the subheader shows the adapter's board
 (`OGXM_BOARD`). When the adapter does not answer the newer requests, a note says its firmware may be
-older or that it is not in Web App mode.
+older or that it is not in D-Input/Debug mode.
 
 ## Update check
 

@@ -11,7 +11,7 @@
  *  connected, two 12-bit second counts (full search = bits 0-11, reduced search = bits 12-23),
  *  0-600 s; 4095 for the reduced search = no limit. Applied without a restart.
  *  Bytes 12-15 (version 2): output modes whose button combo is off, a little-endian bit mask
- *  (bit n = device mode n); zero turns every combo on. D-Input/Debug's Start + LB + RB is always on. Saving a
+ *  (bit n = device mode n); zero turns every combo on. D-Input/Debug can't be turned off (its bit is ignored). Saving a
  *  change of the mask alone applies it right away, without a restart.
  *  Version 4, byte 16: minutes without input before a Bluetooth controller is turned off
  *  (0 = never). Applied without a restart.
@@ -112,6 +112,7 @@ export class DongleSettings {
     ]);
 
     static COMBO_MASK_OFFSET = Object.freeze(12);
+    static DEBUG_MODE = Object.freeze(6);  // D-Input/Debug: can't be turned off
 
     // Button combo of each device mode (firmware UserSettings.cpp ButtonCombo), Xbox names.
     static MODE_COMBOS = Object.freeze({
@@ -120,7 +121,7 @@ export class DongleSettings {
         3: "Start + LB + D-pad Right",
         4: "Start + D-pad Up",
         5: "Start + D-pad Left",
-        6: "Start + LB + RB (always on) or Start + RB + D-pad Left",
+        6: "Start + LB + RB or Start + RB + D-pad Left",
         7: "Start + A",
         8: "Start + D-pad Down",
         9: "Start + LB + D-pad Down",
@@ -193,13 +194,17 @@ export class DongleSettings {
         return true;
     }
 
-    // Whether the button combo may switch the adapter to this device mode.
+    // Whether the button combo may switch the adapter to this device mode. D-Input/Debug (the
+    // way back to the web app) is always on, as in the firmware.
     comboEnabled(mode) {
+        if (mode === DongleSettings.DEBUG_MODE) {
+            return true;
+        }
         return mode >= 32 || ((this.comboDisabledModes >>> mode) & 1) === 0;
     }
 
     setComboEnabled(mode, enabled) {
-        if (mode >= 32) {
+        if (mode >= 32 || mode === DongleSettings.DEBUG_MODE) {
             return;
         }
         const bit = (1 << mode) >>> 0;
