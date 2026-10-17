@@ -1,3 +1,5 @@
+import { DongleSettings } from "./dongleSettings.js";
+import { Capabilities, capabilities } from "./capabilities.js";
 /*  "Diagnostics" panel (OGX-Mini-improved firmware, USB). Shows what the adapter measures for
  *  each controller (identity, link, reports per second, late and lost reports, largest gap
  *  between reports, signal and channels in use), the summary of the previous session (the mode
@@ -10,7 +12,9 @@ export const UIDiagnostics = {
     // requestFunc() resolves with the adapter's report object, or null if it did not answer.
     // extraFunc() returns the web app side of the report (settings, profile...).
     // logFunc(), optional (USB), resolves with the adapter's kept log text, or null.
-    init(requestFunc, extraFunc, logFunc = null) {
+    // flashLogFunc(report), optional (USB), resolves with the newest part of the log kept in
+    // flash (text), or null.
+    init(requestFunc, extraFunc, logFunc = null, flashLogFunc = null) {
         if (this.built) {
             return;
         }
@@ -29,6 +33,8 @@ export const UIDiagnostics = {
         document.getElementById("button-diagReport").addEventListener("click", async () => {
             const report = await refresh();
             const keptLog = logFunc ? await logFunc() : null;
+            const flashLog = flashLogFunc && report && report.flash_log && report.flash_log.pages
+                ? await flashLogFunc(report) : null;
             const file = {
                 generated_at: new Date().toISOString(),
                 web_app: window.location.href,
@@ -37,6 +43,8 @@ export const UIDiagnostics = {
                 web_app_view: extraFunc(),
                 // The adapter's kept log, one line per entry: [rp] events, [esp] the hybrid's ESP32.
                 kept_log: keptLog === null ? null : keptLog.split("\n").filter((line) => line),
+                // The newest part of the log kept in flash (it outlives unplugging the adapter).
+                flash_log: flashLog === null ? null : flashLog.split("\n").filter((line) => line),
             };
             const blob = new Blob([JSON.stringify(file, null, 2)], { type: "application/json" });
             const link = document.createElement("a");
@@ -60,7 +68,62 @@ export const UIDiagnostics = {
         this.built = true;
     },
 
+    /* "Keep the log in flash" (Adapter Options version 7, applied live like the Status LED
+     * options): built once the adapter's record is known. */
+    optionsBuilt: false,
+
+    initOptions(dongleSettings, saveLive) {
+        const container = document.getElementById("diagOptionsInput");
+        if (!container || this.optionsBuilt) {
+            return;
+        }
+        for (const option of DongleSettings.OPTIONS.filter((o) => o.panel === "diagnostics")) {
+            const row = document.createElement("div");
+            row.className = "dongleOption hidden";
+            const id = `dongle-${option.key}`;
+            const label = document.createElement("label");
+            label.htmlFor = id;
+            label.textContent = option.label;
+            Capabilities.addTip(label, option.tip);
+            const box = document.createElement("input");
+            box.type = "checkbox";
+            box.className = "invertCheckbox";
+            box.id = id;
+            box.addEventListener("change", () => {
+                dongleSettings.values[option.key] = box.checked ? 1 : 0;
+                this.setStatus("Saving...");
+                saveLive(() => this.setStatus(`Saved (${new Date().toLocaleTimeString()}).`));
+            });
+            row.appendChild(label);
+            row.appendChild(box);
+            container.appendChild(row);
+        }
+        capabilities.addListener(() => this.updateOptions(dongleSettings));  // the adapter answered
+        this.optionsBuilt = true;
+    },
+
+    updateOptions(dongleSettings) {
+        for (const option of DongleSettings.OPTIONS.filter((o) => o.panel === "diagnostics")) {
+            const box = document.getElementById(`dongle-${option.key}`);
+            const row = box && box.closest(".dongleOption");
+            if (!row) {
+                continue;
+            }
+            const known = (option.since || 1) <= dongleSettings.version;
+            row.classList.toggle("hidden", !known || !capabilities.supports(option.capability));
+            box.checked = dongleSettings.values[option.key] !== 0;
+        }
+    },
+
     show(report) {
+        const flash = document.getElementById("diagFlashLog");
+        if (flash) {
+            const f = report.flash_log;
+            flash.textContent = f && f.available
+                ? `Log in flash: ${f.enabled ? "on" : "off"}, ${f.pages} of ${f.capacity} pages kept` +
+                  (f.dropped_bytes ? `, ${f.dropped_bytes} bytes missed` : "") + "."
+                : "";
+        }
         const info = document.getElementById("diagInfo");
         info.textContent = `${report.board} (${report.chip}), firmware ${report.firmware} (${report.build}), ` +
             `mode ${report.output_mode}, up ${Math.round(report.uptime_ms / 1000)} s, last reset: ${report.last_reset}`;

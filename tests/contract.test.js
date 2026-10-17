@@ -29,6 +29,7 @@ const FIELD = {
     statusLedPicoExt: "status_led_pico_ext",
     statusLedEsp32: "status_led_esp32",
     statusLedEsp32Ext: "status_led_esp32_ext",
+    keepLogInFlash: "keep_log_in_flash",
 };
 
 test("packet IDs match the firmware", () => {

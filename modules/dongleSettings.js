@@ -26,10 +26,11 @@
 import { Capabilities } from "./capabilities.js";
 
 export class DongleSettings {
-    static VERSION = Object.freeze(6);
+    static VERSION = Object.freeze(7);
     static SEARCH_MAX_S = Object.freeze(600);
     static SEARCH_NO_LIMIT = Object.freeze(0xFFF);
-    static LENGTH = Object.freeze(23);
+    static LENGTH = Object.freeze(24);
+    static V6_LENGTH = Object.freeze(23);
     static V5_LENGTH = Object.freeze(18);
     static BRIGHTNESS_OFFSET = Object.freeze(22);
     static BRIGHTNESS_DEFAULT = Object.freeze(48);
@@ -109,6 +110,11 @@ export class DongleSettings {
             label: "External LED on the ESP32 (GPIO 4)", defaultValue: 1,
             tip: "An RGB LED (WS2812B) on GPIO 4 of the ESP32 (RP2040 + ESP32 adapter), in the mode colour.",
         },
+        {
+            key: "keepLogInFlash", offset: 23, since: 7, capability: Capabilities.FLASH_LOG, panel: "diagnostics",
+            label: "Keep the log in flash",
+            tip: "The adapter also saves its log in its flash memory, so what happened away from the computer (playing on a console) can be read afterwards: a log report includes it. It writes only while nothing is being played, and sparingly while playing.",
+        },
     ]);
 
     static COMBO_MASK_OFFSET = Object.freeze(12);
@@ -154,7 +160,8 @@ export class DongleSettings {
 
     // Record length of a version.
     static lengthOf(version) {
-        return version >= 6 ? DongleSettings.LENGTH : version >= 5 ? DongleSettings.V5_LENGTH
+        return version >= 7 ? DongleSettings.LENGTH : version >= 6 ? DongleSettings.V6_LENGTH
+            : version >= 5 ? DongleSettings.V5_LENGTH
             : version >= 4 ? DongleSettings.V4_LENGTH
             : version >= 2 ? DongleSettings.V3_LENGTH : DongleSettings.V1_LENGTH;
     }

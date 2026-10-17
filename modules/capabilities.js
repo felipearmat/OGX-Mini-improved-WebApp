@@ -18,6 +18,7 @@ export class Capabilities {
     static STATUS_LED_PICO_EXT = 1 << 12;   // an external RGB LED on the Pico (GP6)
     static MODE_COLORS = 1 << 13;           // colour per output mode (USB only)
     static STATUS_LED_ESP32_EXT = 1 << 14;  // an external RGB LED on the hybrid ESP32 (GPIO 4)
+    static FLASH_LOG = 1 << 15;             // the log also kept in flash (Diagnostics panel)
 
     static NOTE = "Not supported on this adapter's hardware.";
 

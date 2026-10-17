@@ -28,3 +28,33 @@ test("the saved report has the adapter's and the web app's side", async ({ page,
     expect(log).toContain("[esp] I (812) bluepad32: started");
     await expect(page.locator("#diagStatus")).toHaveText(/Report saved/);
 });
+
+test("the log kept in flash outlives unplugging the adapter", async ({ page, adapter }) => {
+    test.setTimeout(60000);
+    await connect(page);
+    await showPanel(page, "#button-toggleDiagnostics");
+    const box = page.locator("#dongle-keepLogInFlash");
+    await expect(box).toBeVisible();
+    await expect(box).not.toBeChecked();  // off by default
+    await box.check();
+    await expect(page.locator("#diagStatus")).toHaveText(/Saved/);
+    expect(adapter.restarts).toBe(0);  // applied live
+
+    adapter.log("I (4321) BP32: Switch: Joy-Con pair L@0 + R@1");
+    await page.waitForTimeout(7000);  // quiet: written once the log stops growing for 5 s
+
+    await adapter.powerCycle();  // unplugged: the RAM log is gone
+    await page.waitForLoadState("load");
+    await connect(page);
+    await showPanel(page, "#button-toggleDiagnostics");
+    await expect(page.locator("#dongle-keepLogInFlash")).toBeChecked();
+    await page.locator("#button-diagRefresh").click();
+    await expect(page.locator("#diagFlashLog")).toHaveText(/Log in flash: on, [1-9]\d* of \d+ pages kept/);
+
+    const download = page.waitForEvent("download");
+    await page.locator("#button-diagReport").click();
+    const report = JSON.parse(await readFile(await (await download).path(), "utf8"));
+    expect(report.flash_log.join("\n")).toContain("[esp] I (4321) BP32: Switch: Joy-Con pair L@0 + R@1");
+    expect(report.kept_log.join("\n")).not.toContain("Joy-Con pair");  // the RAM started over
+});
+

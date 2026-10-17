@@ -75,7 +75,10 @@ export class VirtualAdapter {
             }
             const wasOpen = this.portOpen;
             this.portOpen = false;
-            if (code === 3) {
+            if (this._powerCycling) {
+                this._powerCycling = false;
+                setTimeout(() => { if (!this._stopping) this._spawn(); }, RESTART_DELAY_MS);
+            } else if (code === 3) {
                 this.restarts++;
                 setTimeout(() => { if (!this._stopping) this._spawn(); }, RESTART_DELAY_MS);
             } else if (code === 4) {
@@ -122,6 +125,20 @@ export class VirtualAdapter {
         if (this.child && this.portOpen) {
             this.child.stdin.write(Buffer.from(bytes));
         }
+    }
+
+    // The adapter unplugged and plugged back: RAM gone (a new process), flash file kept.
+    async powerCycle() {
+        if (!this.child) {
+            return;
+        }
+        this._powerCycling = true;
+        const child = this.child;
+        const exited = new Promise((resolve) => child.once("exit", resolve));
+        child.kill("SIGKILL");
+        await exited;
+        await new Promise((resolve) => setTimeout(resolve, RESTART_DELAY_MS + 50));
+        await this.ready();
     }
 
     // The user holds the mode combo of the given output mode (the adapter restarts into it).

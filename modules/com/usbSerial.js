@@ -44,6 +44,7 @@ class USBManager {
     #kbmSettings = null;
     #diagnosticsResolve = null;
     #logResolve = null;
+    #flashLogResolve = null;
 
     constructor() {
         this.#interface = new USBInterface();
@@ -224,6 +225,43 @@ class USBManager {
         return text;
     }
 
+    // The newest part of the log kept in flash (GET_FLASH_LOG, a page per answer): up to
+    // maxPages from the report's newest page back. Resolves with the text, or null.
+    async getFlashLog(report, maxPages = 64) {
+        const newest = report.flash_log.newest_seq;
+        let seq = Math.max(1, newest - maxPages + 1);
+        let text = "";
+        for (let i = 0; i < maxPages; i++) {
+            const answer = new Promise((resolve) => {
+                this.#flashLogResolve = resolve;
+                setTimeout(() => {
+                    if (this.#flashLogResolve === resolve) {
+                        this.#flashLogResolve = null;
+                        resolve(null);
+                    }
+                }, 2000);
+            });
+            let header = this.#headerFromUi(PACKET_ID.GET_FLASH_LOG);
+            const from = new Uint8Array(4);
+            new DataView(from.buffer).setUint32(0, seq, true);
+            await this.#writeToDevice(header, from);
+            const data = await answer;
+            if (!data || data.length < 22) {
+                return i === 0 ? null : text;
+            }
+            const got = new DataView(data.buffer, data.byteOffset, data.byteLength).getUint32(0, true);
+            if (got === 0) {
+                break;
+            }
+            text += new TextDecoder().decode(data.subarray(22));
+            seq = got + 1;
+            if (got >= newest) {
+                break;
+            }
+        }
+        return text;
+    }
+
     // Rumble test (OGX-Mini-improved firmware): left / right motor 0-255, duration in ms.
     async sendRumbleTest(left, right, durationMs) {
         let header = this.#headerFromUi(PACKET_ID.SET_GP_OUT);
@@ -296,6 +334,7 @@ class USBManager {
                     }
                     UISearch.update(this.#dongleSettings);
                     UILed.update(this.#dongleSettings);
+                    UIDiagnostics.updateOptions(this.#dongleSettings);
                     UIRumble.setAvailable(true);  // same firmware generation
                 }
                 break;
@@ -341,6 +380,13 @@ class USBManager {
                 }
                 break;
             }
+
+            case PACKET_ID.GET_FLASH_LOG:
+                if (this.#flashLogResolve) {
+                    this.#flashLogResolve(bufferIn.slice(0, dataLen));
+                    this.#flashLogResolve = null;
+                }
+                break;
 
             case PACKET_ID.GET_LOG:
                 if (this.#logResolve) {
@@ -460,6 +506,7 @@ export const USB = {
         UIDongle.init(dongleSettings);
         UISearch.init(dongleSettings);
         UILed.init(dongleSettings);
+        UIDiagnostics.initOptions(dongleSettings, (done) => UIDongle.scheduleLiveSave(done));
         const kbmSettings = new KbmSettings();
         UIKbm.init(kbmSettings);
         const usbManager = new USBManager();
@@ -511,7 +558,7 @@ export const USB = {
                 adapter_options: dongleSettings.version ? { version: dongleSettings.version, ...dongleSettings.values } : null,
                 capabilities: capabilities.known ? `0x${capabilities.mask.toString(16)}` : null,
                 mouse_keyboard_mapping: Array.from(kbmSettings.getBytes()),
-            }), () => usbManager.getKeptLog());
+            }), () => usbManager.getKeptLog(), (report) => usbManager.getFlashLog(report));
             UIDiagnostics.setAvailable(true);
             UITouchpad.initToggle();
 
