@@ -58,3 +58,19 @@ test("the log kept in flash outlives unplugging the adapter", async ({ page, ada
     expect(report.kept_log.join("\n")).not.toContain("Joy-Con pair");  // the RAM started over
 });
 
+
+test("detailed link diagnostics are saved live and shown in the report", async ({ page, adapter }) => {
+    await connect(page);
+    await showPanel(page, "#button-toggleDiagnostics");
+    const box = page.locator("#dongle-linkDiagnostics");
+    await expect(box).toBeVisible();
+    await expect(box).not.toBeChecked();  // off by default
+    await box.check();
+    await expect(page.locator("#diagStatus")).toHaveText(/Saved/);
+    expect(adapter.restarts).toBe(0);  // applied live
+
+    const download = page.waitForEvent("download");
+    await page.locator("#button-diagReport").click();
+    const report = JSON.parse(await readFile(await (await download).path(), "utf8"));
+    expect(report.adapter.bluetooth.link_details).toBe(true);
+});

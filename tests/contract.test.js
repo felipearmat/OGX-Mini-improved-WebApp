@@ -22,7 +22,8 @@ const FIELD = {
     joyconSoloHorizontal: "joycon_solo_horizontal",
     macPerController: "mac_per_controller",
     ps4LegacyMotionScale: "ps4_legacy_motion_scale",
-    singleController: "unused_single_controller",
+    singleController: "link_diagnostics",  // byte 7: the single controller option in versions 1-2
+    linkDiagnostics: "link_diagnostics",
     joyconPairRumblePerSide: "joycon_pair_rumble_per_side",
     highTxPower: "high_tx_power",
     statusLedPico: "status_led_pico",

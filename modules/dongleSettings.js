@@ -22,11 +22,14 @@
  *  Version 6, bytes 18-22: the status LEDs (panel "led", Status LED panel, saved live): the
  *  Pico's LED, an external RGB LED on the Pico, the hybrid ESP32's LED and an external RGB LED on
  *  the ESP32 on (0 / 1), then the RGB LEDs' brightness (1-255).
+ *  Version 7, byte 23: keep the log in flash (panel "diagnostics", saved live).
+ *  Version 8, byte 7 (unused since version 3): detailed link diagnostics (panel "diagnostics",
+ *  saved live). Same 24 bytes as version 7.
  */
 import { Capabilities } from "./capabilities.js";
 
 export class DongleSettings {
-    static VERSION = Object.freeze(7);
+    static VERSION = Object.freeze(8);
     static SEARCH_MAX_S = Object.freeze(600);
     static SEARCH_NO_LIMIT = Object.freeze(0xFFF);
     static LENGTH = Object.freeze(24);
@@ -109,6 +112,11 @@ export class DongleSettings {
             key: "statusLedEsp32Ext", offset: 21, since: 6, capability: Capabilities.STATUS_LED_ESP32_EXT, panel: "led",
             label: "External LED on the ESP32 (GPIO 4)", defaultValue: 1,
             tip: "An RGB LED (WS2812B) on GPIO 4 of the ESP32 (RP2040 + ESP32 adapter), in the mode colour.",
+        },
+        {
+            key: "linkDiagnostics", offset: 7, since: 8, capability: Capabilities.BLUETOOTH, panel: "diagnostics",
+            label: "Detailed link diagnostics",
+            tip: "The report also shows each Bluetooth controller's signal (RSSI), the channels in use, failed contacts, the transmit power and the controller's Bluetooth chip. The adapter asks the radio for them about once a second; leave it off unless you are looking into a connection problem.",
         },
         {
             key: "keepLogInFlash", offset: 23, since: 7, capability: Capabilities.FLASH_LOG, panel: "diagnostics",
