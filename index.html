@@ -118,7 +118,7 @@
 
             <div class="togglePanelControl modeHidden" id="touchpadControl">
                 <div class="header">
-                    <h3>Touchpad</h3>
+                    <h3>Touchpad and Motion</h3>
                 </div>
                 <div class="buttonPanel">
                     <button id="button-toggleTouchpad">Hide</button>
@@ -126,11 +126,37 @@
             </div>
 
             <div id="touchpadPanel" class="dongleOptionsPanel modeHidden">
-                <label>DS4 / DualSense touchpad as the adapter reads it (USB): a green ball per finger.</label>
-                <canvas id="canvasTouchpad" width="384" height="216"></canvas>
-                <div class="touchpadInfo">
-                    <div id="touchpadPressInput" class="digitalButtonInput"></div>
-                    <span id="touchpadStatus">No finger on the touchpad</span>
+                <div class="sensorRow">
+                    <div class="sensorBlock">
+                        <label>Touchpad (DS4 / DualSense) as the adapter reads it: a green ball per finger.</label>
+                        <canvas id="canvasTouchpad" width="384" height="216"></canvas>
+                        <div class="touchpadInfo">
+                            <div id="touchpadPressInput" class="digitalButtonInput"></div>
+                            <span id="touchpadStatus">No finger on the touchpad</span>
+                        </div>
+                    </div>
+                    <div class="sensorBlock">
+                        <label>Motion (prototype): the box turns with the controller. Lay it flat, press Start, then Recentre.</label>
+                        <div class="motionStage">
+                            <div class="motionCamera">
+                                <div id="motionBox" class="motionBox">
+                                    <div class="motionFace motionTop">TOP<span class="motionAxis">X →</span></div>
+                                    <div class="motionFace motionBottom"></div>
+                                    <div class="motionFace motionFront">player side</div>
+                                    <div class="motionFace motionBack">triggers</div>
+                                    <div class="motionFace motionLeft"></div>
+                                    <div class="motionFace motionRight"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <pre id="motionAccel" class="motionReadout">accel g</pre>
+                        <pre id="motionGyro" class="motionReadout">gyro deg/s</pre>
+                        <div class="dongleOptionsControls">
+                            <button class="controlsButton" id="button-motionStart">Start</button>
+                            <button class="controlsButton" id="button-motionRecentre">Recentre</button>
+                        </div>
+                        <label id="motionStatus"></label>
+                    </div>
                 </div>
             </div>
 

@@ -556,7 +556,7 @@ select:disabled {
 #canvasTouchpad {
     display: block;
     width: 100%;
-    max-width: 25rem;
+    max-width: 17.5rem;  /* 70 % of the former 25rem */
     height: auto;
     margin: 8px auto;
     background-color: #f0f0f0;
@@ -622,3 +622,26 @@ select:disabled {
     margin: 6px 0;
     padding-left: 20px;
 }
+
+/* Motion panel (prototype): a box shaped like a controller lying flat (wide, thin, deep). */
+.motionStage { height: 132px; perspective: 385px; display: flex; align-items: center; justify-content: center; }
+.motionBox { position: relative; width: 0; height: 0; transform-style: preserve-3d; }
+.motionFace { position: absolute; display: flex; align-items: center; justify-content: center; gap: 8px;
+    font: 600 10px monospace; color: #fff; border: 1px solid rgba(0, 0, 0, 0.35); backface-visibility: visible; }
+.motionTop, .motionBottom { width: 110px; height: 66px; left: -55px; top: -33px; }
+.motionFront, .motionBack { width: 110px; height: 16.5px; left: -55px; top: -8.25px; }
+.motionLeft, .motionRight { width: 66px; height: 16.5px; left: -33px; top: -8.25px; }
+.motionTop { background: #2e7d5b; transform: rotateX(90deg) translateZ(8.25px); }
+.motionBottom { background: #1d4d38; transform: rotateX(-90deg) translateZ(8.25px); }
+.motionFront { background: #3a6fb0; transform: translateZ(33px); }
+.motionBack { background: #b0543a; transform: rotateY(180deg) translateZ(33px); }
+.motionLeft { background: #777; transform: rotateY(-90deg) translateZ(55px); }
+.motionRight { background: #999; transform: rotateY(90deg) translateZ(55px); }
+.motionAxis { font-weight: 400; opacity: 0.8; }
+.motionReadout { margin: 4px 0; font-size: 13px; }
+.motionCamera { transform-style: preserve-3d; transform: rotateX(-25deg); }  /* seen a little from above */
+/* Touchpad and Motion: the motion box below the touchpad. */
+.sensorRow { display: grid; gap: 28px; }
+/* A rule and some room between the touchpad and the motion box: two separate views. */
+.sensorBlock + .sensorBlock { border-top: 1px solid #ccc; padding-top: 20px; }
+.sensorBlock { min-width: 0; display: grid; gap: 6px; align-content: start; }

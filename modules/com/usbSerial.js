@@ -11,6 +11,7 @@ import { UILed } from "../uiLed.js";
 import { PACKET_ID } from "./protocol.js";
 import { UIRumble } from "../uiRumble.js";
 import { UITouchpad } from "../uiTouchpad.js";
+import { UIMotion } from "../uiMotion.js";
 import { UISearch } from "../uiSearch.js";
 import { UIDiagnostics } from "../uiDiagnostics.js";
 import { capabilities } from "../capabilities.js";
@@ -561,6 +562,7 @@ export const USB = {
             }), () => usbManager.getKeptLog(), (report) => usbManager.getFlashLog(report));
             UIDiagnostics.setAvailable(true);
             UITouchpad.initToggle();
+            UIMotion.init(() => usbManager.getDiagnostics());
 
             UIRumble.init(async (left, right, ms) => {
                 await usbManager.sendRumbleTest(left, right, ms);

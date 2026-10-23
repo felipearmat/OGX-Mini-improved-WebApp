@@ -42,13 +42,17 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
   combo itself is shown below it), so a game's button chords cannot switch the adapter by
   accident. D-Input/Debug, where the web app connects, is always on. Stored in the Adapter Options
   record, bytes 12-15 (bit mask by mode).
-- **Touchpad** (USB; PS4, STEAM, Mouse + Keyboard and D-Input/Debug modes; first section of the
+- **Touchpad and Motion** (USB; PS4, STEAM, Mouse + Keyboard and D-Input/Debug modes; first section of the
   page): the DS4 / DualSense touchpad as the adapter reads it, a green ball per finger, and the
   *Touchpad press* mapping row. The press is the Misc button (also listed as "Misc / Touchpad
   press" in Digital Mappings), so it can be mapped like the other buttons and lights up while
   pressed. USB packet `GP_TOUCH`
   (0x82), sent after each live input packet while the pad reports its touchpad: two touch points
   of 4 bytes as the pads send them, then the click byte.
+  Below it, **Motion** (prototype): a box that turns with the controller (gyro integrated, levelled by
+  gravity; *Start*, *Recentre*), with the accelerometer (g) and gyro (deg/s) readouts. It reads the
+  diagnostics report's `motion` block again as soon as each answer arrives (a few updates per second);
+  the firmware's live motion stream (OGX-Mini-improved ROADMAP item 0) will replace the polling.
 - **Live input in the mappings**: each mapping row (D-pad, buttons, analog, Mouse + Keyboard)
   lights up green while its controller input is pressed — the controller's own button, whatever it
   is mapped to (OGX-Mini-improved firmware sends unmapped input in D-Input/Debug mode while the web app is open).
