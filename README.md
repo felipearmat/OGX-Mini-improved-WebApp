@@ -49,10 +49,12 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
   pressed. USB packet `GP_TOUCH`
   (0x82), sent after each live input packet while the pad reports its touchpad: two touch points
   of 4 bytes as the pads send them, then the click byte.
-  Below it, **Motion** (prototype): a box that turns with the controller (gyro integrated, levelled by
-  gravity; *Start*, *Recentre*), with the accelerometer (g) and gyro (deg/s) readouts. It reads the
-  diagnostics report's `motion` block again as soon as each answer arrives (a few updates per second);
-  the firmware's live motion stream (OGX-Mini-improved ROADMAP item 0) will replace the polling.
+  Below it, **Motion**: a box that turns with the controller (gyro integrated, levelled by gravity;
+  *Start*, *Recentre*), with the accelerometer (g) and gyro (deg/s) readouts. With firmware that
+  has the capability `MOTION_STREAM` it takes the USB packet `GP_MOTION` (0x83), sent with each live
+  input: motion source (u8), accel in mg and gyro in deg/s x10 (i16 x3 each, the common frame: X
+  right, Y out of the face, Z toward the player), the adapter's time in ms (u32). Older firmware:
+  the diagnostics report's `motion` block, asked for again as each answer arrives.
 - **Live input in the mappings**: each mapping row (D-pad, buttons, analog, Mouse + Keyboard)
   lights up green while its controller input is pressed — the controller's own button, whatever it
   is mapped to (OGX-Mini-improved firmware sends unmapped input in D-Input/Debug mode while the web app is open).
@@ -69,6 +71,10 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
   of the session before the switch to D-Input/Debug mode. **Generate log report** saves a JSON file
   (the adapter's report plus the browser and the web app's view of the settings) to send when
   asking for help. Shown only when the firmware answers (OGX-Mini-improved v1.1.0 or later).
+  Options there: *Keep the log in flash*, then *Detailed controller diagnostics*, indented below it
+  and greyed out while the log in flash is off (the advanced report is kept there).
+- **Mode colour**: below the colour wheel, a box with the colour code (`#RRGGBB`) — it follows the
+  wheel, and a code typed in moves the wheel's marker (and shows on the adapter while you pick).
 - Output modes added to the list: Wii U, PS4, STEAM (DualSense), Mouse + Keyboard.
 
 Everything else (profiles, stick and trigger settings, button mappings) works as in the
@@ -84,7 +90,7 @@ Chromium-based browser (Chrome, Edge, Brave): WebUSB, Web Serial and Web Bluetoo
 and a secure context, which `localhost` is.
 
 ```sh
-./serve.sh          # http://localhost:8000
+./serve.sh          # http://localhost:8000 (answers with Cache-Control: no-store, so a change shows on reload)
 ./serve.sh 8080     # another port
 ```
 
