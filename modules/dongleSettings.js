@@ -117,12 +117,12 @@ export class DongleSettings {
         {
             key: "keepLogInFlash", offset: 23, since: 7, capability: Capabilities.FLASH_LOG, panel: "diagnostics",
             label: "Keep the log in flash",
-            tip: "The adapter also saves its log in its flash memory, so what happened away from the computer (playing on a console) can be read afterwards: a log report includes it. It writes only while nothing is being played, and sparingly while playing.",
+            tip: "The adapter also saves its log in its flash memory, so what happened away from the computer (playing on a console) can be read afterwards: a log report includes it. It writes only while nothing is being played, and sparingly while playing. Needed for \"Detailed controller diagnostics\".",
         },
         {
             key: "linkDiagnostics", offset: 7, since: 8, capability: Capabilities.BLUETOOTH, panel: "diagnostics",
             label: "Detailed controller diagnostics", requires: "keepLogInFlash",
-            tip: "The report also shows each Bluetooth controller's signal (RSSI), the channels in use, failed contacts, the transmit power and the controller's Bluetooth chip. The adapter asks the radio for them about once a second; leave it off unless you are looking into a connection problem. Needs \"Keep the log in flash\": the advanced report is kept there.",
+            tip: "The report also shows each Bluetooth controller's signal (RSSI), the channels in use, failed contacts, the transmit power and the controller's Bluetooth chip. The adapter asks the radio for one of them every 0.7 s, so leave it off unless you are looking into a connection problem. Works only with \"Keep the log in flash\" on.",
         },
     ]);
 
