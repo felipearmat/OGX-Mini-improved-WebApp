@@ -19,7 +19,8 @@
  *  ESP32 hybrid). Applied without a restart, so it sits in the Bluetooth config panel (panel:
  *  "bluetooth") and is saved live. Each option names the capability it needs (capabilities.js);
  *  the panel turns it off when the hardware lacks it.
- *  Version 6, bytes 18-22: the status LEDs (panel "led", Status LED panel, saved live): the
+ *  Version 6, bytes 18-22: the status LEDs (Adapter Options, saved with its button; the adapter
+ *  restarts, so the hybrid's ESP32 starts with them): the
  *  Pico's LED, an external RGB LED on the Pico, the hybrid ESP32's LED and an external RGB LED on
  *  the ESP32 on (0 / 1), then the RGB LEDs' brightness (1-255).
  *  Version 7, byte 23: keep the log in flash (panel "diagnostics", saved live).
@@ -94,22 +95,22 @@ export class DongleSettings {
             help: "+9 dBm instead of +3 dBm (RP2040 + ESP32 adapter).",
         },
         {
-            key: "statusLedPico", offset: 18, since: 6, capability: Capabilities.STATUS_LED_PICO, panel: "led",
+            key: "statusLedPico", offset: 18, since: 6, capability: Capabilities.STATUS_LED_PICO,
             label: "Pico LED", defaultValue: 1,
-            tip: "The Pico board's own LED (or its RGB LED, on boards that have one): the mode's blink code at boot, then blinking while searching for controllers. On a Pico W / Pico 2 W in the RP2040 + ESP32 adapter it stays dark: it is wired to the radio chip, which that adapter leaves off.",
+            tip: "The Pico board's own LED (or its RGB LED, on boards that have one): the mode's blink code at boot, then blinking while searching for controllers. On a Pico W / Pico 2 W in the RP2040 + ESP32 adapter there is none (shown as not supported with firmware built for it): that pin goes to the radio chip, which that adapter leaves off.",
         },
         {
-            key: "statusLedPicoExt", offset: 19, since: 6, capability: Capabilities.STATUS_LED_PICO_EXT, panel: "led",
+            key: "statusLedPicoExt", offset: 19, since: 6, capability: Capabilities.STATUS_LED_PICO_EXT,
             label: "External LED on the Pico (GP6)", defaultValue: 1,
             tip: "An RGB LED (WS2812B) on GP6 of a Pico 2 / Pico 2 W, in the mode colour.",
         },
         {
-            key: "statusLedEsp32", offset: 20, since: 6, capability: Capabilities.STATUS_LED_ESP32, panel: "led",
+            key: "statusLedEsp32", offset: 20, since: 6, capability: Capabilities.STATUS_LED_ESP32,
             label: "ESP32 LED", defaultValue: 1,
-            tip: "The ESP32 board's LED on the RP2040 + ESP32 adapter.",
+            tip: "The LED on GPIO 15 of the ESP32 on the RP2040 + ESP32 adapter (a DevKit has none there; the blue LED that flickers with activity is the board's own).",
         },
         {
-            key: "statusLedEsp32Ext", offset: 21, since: 6, capability: Capabilities.STATUS_LED_ESP32_EXT, panel: "led",
+            key: "statusLedEsp32Ext", offset: 21, since: 6, capability: Capabilities.STATUS_LED_ESP32_EXT,
             label: "External LED on the ESP32 (GPIO 4)", defaultValue: 1,
             tip: "An RGB LED (WS2812B) on GPIO 4 of the ESP32 (RP2040 + ESP32 adapter), in the mode colour.",
         },
@@ -245,15 +246,14 @@ export class DongleSettings {
         return bytes;
     }
 
-    // Options shown in the Bluetooth config and Status LED panels: the adapter applies them
-    // without a restart.
+    // Options shown in the Bluetooth config and Diagnostics panels: the adapter applies them
+    // without a restart. (The status LED options are Adapter Options: saved with its button.)
     #writeLiveOptions(bytes) {
         for (const option of this.availableOptions()) {
             if (option.panel && bytes.length > option.offset) {
                 bytes[option.offset] = this.values[option.key] ? 1 : 0;
             }
         }
-        this.#writeBrightness(bytes);
     }
 
     #writeBrightness(bytes) {

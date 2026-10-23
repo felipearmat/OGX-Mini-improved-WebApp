@@ -1,13 +1,8 @@
-import { DongleSettings } from "./dongleSettings.js";
-import { UIDongle } from "./uiDongle.js";
 import { ModeView } from "./modeView.js";
 import { Capabilities, capabilities } from "./capabilities.js";
 
-/*  Status LEDs (OGX-Mini-improved firmware).
- *
- *  "Status LED" panel: which LEDs are on (board, ESP32, external RGB) and the RGB LED's
- *  brightness, Adapter Options version 6, applied without a restart and saved by themselves like
- *  the Bluetooth config. Options the hardware lacks are off with a note (capabilities.js).
+/*  Mode colour (OGX-Mini-improved firmware). Which status LEDs are on and their brightness are
+ *  Adapter Options (uiDongle.js), saved with its Save button: the adapter restarts with them.
  *
  *  Mode colour (under the Device Mode dropdown, USB only): the colour of the selected mode on the
  *  controller's lightbar and the RGB LED. A colour wheel (angle = hue, centre = the light tone,
@@ -67,131 +62,10 @@ export function rgbToHs([r, g, b]) {
 }
 
 export const UILed = {
-    built: false,
-    saved: false,
     colors: null,       // Uint8Array, the adapter's table once read
     previewFunc: null,  // async (active, r, g, b)
     saveColorsFunc: null,
     picking: null,      // [r, g, b] being picked
-
-    /* ---------- Status LED panel ---------- */
-
-    init(dongleSettings) {
-        if (this.built) {
-            return;
-        }
-        const container = document.getElementById("ledInput");
-        if (!container) {
-            return;
-        }
-        const changed = () => {
-            this.setStatus("Saving...");
-            UIDongle.scheduleLiveSave(() => {
-                const t = new Date();
-                const hms = [t.getHours(), t.getMinutes(), t.getSeconds()].map((n) => String(n).padStart(2, "0")).join(":");
-                this.saved = true;
-                this.setStatus(`Latest Save ${hms}`);
-            });
-        };
-        for (const option of DongleSettings.OPTIONS.filter((o) => o.panel === "led")) {
-            const row = document.createElement("div");
-            row.className = "dongleOption";
-            const id = `dongle-${option.key}`;
-            const label = document.createElement("label");
-            label.htmlFor = id;
-            label.textContent = option.label;
-            const box = document.createElement("input");
-            box.type = "checkbox";
-            box.className = "invertCheckbox";
-            box.id = id;
-            box.addEventListener("change", () => {
-                dongleSettings.values[option.key] = box.checked ? 1 : 0;
-                changed();
-            });
-            row.appendChild(label);
-            row.appendChild(box);
-            Capabilities.addTip(label, option.tip);
-            container.appendChild(row);
-        }
-        const row = document.createElement("div");
-        row.className = "dongleOption";
-        row.id = "ledBrightnessRow";
-        const label = document.createElement("label");
-        label.htmlFor = "led-brightness";
-        label.textContent = "External LED brightness";
-        Capabilities.addTip(label, "Brightness of the RGB LEDs (1-255). The controller's lightbar always uses the full colour.");
-        const range = document.createElement("input");
-        range.type = "range";
-        range.id = "led-brightness";
-        range.min = "1";
-        range.max = "255";
-        range.step = "1";
-        const value = document.createElement("span");
-        value.className = "kbmRangeValue";
-        value.id = "led-brightness-value";
-        range.addEventListener("input", () => {
-            dongleSettings.values.statusLedBrightness = Number(range.value);
-            value.textContent = range.value;
-            changed();
-        });
-        row.appendChild(label);
-        row.appendChild(range);
-        row.appendChild(value);
-        container.appendChild(row);
-
-        capabilities.addListener(() => this.update(dongleSettings));
-        const toggle = document.getElementById("button-toggleLed");
-        const panel = document.getElementById("ledPanel");
-        if (toggle && panel) {
-            toggle.addEventListener("click", () => {
-                const hidden = panel.classList.toggle("hidden");
-                toggle.textContent = hidden ? "Show" : "Hide";
-            });
-        }
-        this.built = true;
-    },
-
-    // Values from the adapter; shown only for firmware with the LED options (version 6).
-    update(dongleSettings) {
-        const available = !!dongleSettings.storedBytes && dongleSettings.version >= 6;
-        for (const id of ["ledControl", "ledPanel"]) {
-            const element = document.getElementById(id);
-            if (element) {
-                element.classList.toggle("hidden", !available);
-            }
-        }
-        if (!available) {
-            return;
-        }
-        if (!this.saved) {
-            this.setStatus("Current Config");
-        }
-        for (const option of DongleSettings.OPTIONS.filter((o) => o.panel === "led")) {
-            const box = document.getElementById(`dongle-${option.key}`);
-            const row = box && box.closest(".dongleOption");
-            if (!row) {
-                continue;
-            }
-            box.checked = dongleSettings.values[option.key] !== 0;
-            Capabilities.markRow(row, capabilities.supports(option.capability));
-        }
-        const range = document.getElementById("led-brightness");
-        const value = document.getElementById("led-brightness-value");
-        if (range && value) {
-            range.value = String(dongleSettings.values.statusLedBrightness);
-            value.textContent = range.value;
-            const rgb = capabilities.supports(Capabilities.STATUS_LED_PICO_EXT) ||
-                capabilities.supports(Capabilities.STATUS_LED_ESP32_EXT);
-            Capabilities.markRow(range.closest(".dongleOption"), rgb);
-        }
-    },
-
-    setStatus(text) {
-        const status = document.getElementById("ledStatus");
-        if (status) {
-            status.textContent = text;
-        }
-    },
 
     /* ---------- Mode colour ---------- */
 

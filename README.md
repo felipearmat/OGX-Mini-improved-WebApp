@@ -140,8 +140,9 @@ unused); bytes 9-11 hold the two search times as 12-bit second counts (full = bi
 reduced = bits 12-23, 4095 = no limit); bytes 12-15 the mode combo mask; byte 16 the idle
 turn-off time (minutes, 0 = never; version 4); byte 17 the higher transmit power (version 5);
 bytes 18-21 the status LEDs (Pico, Pico external, ESP32, ESP32 external) and byte 22 the RGB
-LEDs' brightness (0 = the default, 48; version 6); byte 23 keeps the log in flash too (version 7,
-Diagnostics panel).
+LEDs' brightness (0 = the default, 48; version 6), shown in Adapter Options and saved with its
+button (the adapter restarts, so the hybrid's ESP32 starts with them); byte 23 keeps the log in
+flash too (version 7, Diagnostics panel).
 Older firmware answers with version 6 (23 bytes), 5 (18 bytes), 4 (17 bytes), 3 (16 bytes), 2 (byte 7 = single
 controller, no search times) or 1 (the first 8 bytes); the page then shows only those options and
 saves in that format.

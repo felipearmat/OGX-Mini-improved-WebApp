@@ -36,27 +36,31 @@ test("a live save changes only the live options", () => {
     // Adapter Options edits not saved yet (they need a restart): left out
     s.values.disconnectPadsOnModeChange = 1;
     s.values.macPerController = 1;
-    // live ones
-    s.values.fullSearchSeconds = 45;
+    // Status LED options: Adapter Options too since 2026-10-23 (they restart the adapter)
     s.values.statusLedPicoExt = 0;
     s.values.statusLedBrightness = 200;
+    // live ones
+    s.values.fullSearchSeconds = 45;
     s.values.idleOffMinutes = 5;
     s.setComboEnabled(5, false);
     const live = Array.from(s.liveBytes());
     const changed = live.map((v, i) => (v !== stored[i] ? i : -1)).filter((i) => i >= 0);
-    assert.deepEqual(changed, [9, 12, 16, 19, 22]);
+    assert.deepEqual(changed, [9, 12, 16]);
     assert.equal(live[1], 0, "turn-off-before-mode-change stays as stored");
     assert.equal(live[5], 0, "MAC per controller stays as stored");
     assert.equal(live[9], 45);
-    assert.equal(live[22], 200);
+    // The Save button's record has them.
+    const full = s.getBytes();
+    assert.equal(full[19], 0);
+    assert.equal(full[22], 200);
 });
 
 test("brightness stays 1-255", () => {
     const s = record();
     s.values.statusLedBrightness = 0;
-    assert.equal(s.liveBytes()[22], 48, "0 is the default");
+    assert.equal(s.getBytes()[22], 48, "0 is the default");
     s.values.statusLedBrightness = 999;
-    assert.equal(s.liveBytes()[22], 255);
+    assert.equal(s.getBytes()[22], 255);
 });
 
 test("a version 5 record has no LED options and is saved as version 5", () => {

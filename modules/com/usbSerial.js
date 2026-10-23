@@ -334,7 +334,6 @@ class USBManager {
                         UIDongle.refreshModeCombo();
                     }
                     UISearch.update(this.#dongleSettings);
-                    UILed.update(this.#dongleSettings);
                     UIDiagnostics.updateOptions(this.#dongleSettings);
                     UIRumble.setAvailable(true);  // same firmware generation
                 }
@@ -510,7 +509,6 @@ export const USB = {
         const dongleSettings = new DongleSettings();
         UIDongle.init(dongleSettings);
         UISearch.init(dongleSettings);
-        UILed.init(dongleSettings);
         UIDiagnostics.initOptions(dongleSettings, (done) => UIDongle.scheduleLiveSave(done));
         const kbmSettings = new KbmSettings();
         UIKbm.init(kbmSettings);

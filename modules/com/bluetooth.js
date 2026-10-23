@@ -8,7 +8,6 @@ import { Gamepad } from "../gamepad.js";
 import { Mutex } from "../mutex.js";
 import { DongleSettings } from "../dongleSettings.js";
 import { UISearch } from "../uiSearch.js";
-import { UILed } from "../uiLed.js";
 import { ModeView } from "../modeView.js";
 import { UIDongle } from "../uiDongle.js";
 import { KbmSettings } from "../kbmSettings.js";
@@ -376,7 +375,6 @@ export const BT = {
         const dongleSettings = new DongleSettings();
         UIDongle.init(dongleSettings);
         UISearch.init(dongleSettings);
-        UILed.init(dongleSettings);
         const kbmSettings = new KbmSettings();
         UIKbm.init(kbmSettings);
         const btManager = new BTManager();
@@ -426,7 +424,6 @@ export const BT = {
                 await btManager.saveDongleBytes(bytes);
             });
             UISearch.update(dongleSettings);
-            UILed.update(dongleSettings);
 
             UIKbm.addCallbackSave(async () => {
                 UIKbm.setStatus("Saving...");

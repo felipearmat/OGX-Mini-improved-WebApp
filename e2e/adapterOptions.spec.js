@@ -1,22 +1,22 @@
 import { test, expect, connect, reconnectAfterRestart, showPanel } from "./fixtures.js";
 
-test("status LED options and brightness apply live, without a restart", async ({ page, adapter }) => {
+test("status LED options and brightness are Adapter Options: saved with the button, the adapter restarts", async ({ page, adapter }) => {
     await connect(page);
-    await showPanel(page, "#button-toggleLed");
+    await showPanel(page, "#button-toggleDongleOptions");
     await adapter.waitLed("303030");  // white (D-Input/Debug) at the default brightness 48
 
     await page.locator("#led-brightness").fill("100");
-    await expect(page.locator("#ledStatus")).toHaveText(/Latest Save/);
-    await adapter.waitLed("646464");
-
     await page.locator("#dongle-statusLedPicoExt").uncheck();
-    await expect(page.locator("#ledStatus")).toHaveText(/Latest Save/);
-    await adapter.waitLed("000000");
+    await page.waitForTimeout(500);
+    await adapter.waitLed("303030");  // nothing changes before Save
     expect(adapter.restarts).toBe(0);
 
-    // Stored: read back after the page reloads.
-    await page.reload();
-    await connect(page);
+    await page.locator("#button-saveDongleOptions").click();
+    await reconnectAfterRestart(page, adapter, 1);
+    await adapter.waitLed("000000");  // the external LED off after the restart
+
+    // Stored: read back after the restart.
+    await showPanel(page, "#button-toggleDongleOptions");
     await expect(page.locator("#led-brightness")).toHaveValue("100");
     await expect(page.locator("#dongle-statusLedPicoExt")).not.toBeChecked();
 });

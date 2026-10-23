@@ -56,6 +56,7 @@ export const UIDongle = {
             }
             container.appendChild(row);
         }
+        container.appendChild(this.brightnessRow(dongleSettings));
 
         const toggle = document.getElementById("button-toggleDongleOptions");
         const panel = document.getElementById("dongleOptionsPanel");
@@ -91,6 +92,44 @@ export const UIDongle = {
             // Off, with a note, where this hardware can't use it (capabilities.js).
             Capabilities.markRow(row, capabilities.supports(option.capability));
         }
+        const range = document.getElementById("led-brightness");
+        const value = document.getElementById("led-brightness-value");
+        if (range && value) {
+            range.value = String(dongleSettings.values.statusLedBrightness);
+            value.textContent = range.value;
+            const row = range.closest(".dongleOption");
+            row.classList.toggle("hidden", dongleSettings.version < 6);
+            Capabilities.markRow(row, capabilities.supports(Capabilities.STATUS_LED_PICO_EXT) ||
+                capabilities.supports(Capabilities.STATUS_LED_ESP32_EXT));
+        }
+    },
+
+    // The RGB LEDs' brightness (Adapter Options version 6, byte 22): saved with the others.
+    brightnessRow(dongleSettings) {
+        const row = document.createElement("div");
+        row.className = "dongleOption";
+        row.id = "ledBrightnessRow";
+        const label = document.createElement("label");
+        label.htmlFor = "led-brightness";
+        label.textContent = "External LED brightness";
+        Capabilities.addTip(label, "Brightness of the RGB LEDs (1-255). The controller's lightbar always uses the full colour.");
+        const range = document.createElement("input");
+        range.type = "range";
+        range.id = "led-brightness";
+        range.min = "1";
+        range.max = "255";
+        range.step = "1";
+        const value = document.createElement("span");
+        value.className = "kbmRangeValue";
+        value.id = "led-brightness-value";
+        range.addEventListener("input", () => {
+            dongleSettings.values.statusLedBrightness = Number(range.value);
+            value.textContent = range.value;
+        });
+        row.appendChild(label);
+        row.appendChild(range);
+        row.appendChild(value);
+        return row;
     },
 
     // Show or hide the whole section (adapter support).

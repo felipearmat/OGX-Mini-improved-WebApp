@@ -4,7 +4,7 @@ test("connects over USB and reads the adapter", async ({ page }) => {
     await connect(page);
     await expect(page.locator("#dropdown-deviceMode")).toHaveValue("6");  // D-Input/Debug, the mode the web app talks to
     await expect(page.locator("#firmwareWarning")).toBeHidden();
-    await expect(page.locator("#ledControl")).toBeVisible();
+    await expect(page.locator("#ledBrightnessRow")).toBeAttached();
     await expect(page.locator("#modeColorRow")).toBeVisible();
 });
 
