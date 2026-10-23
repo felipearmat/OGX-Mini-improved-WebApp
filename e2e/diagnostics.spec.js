@@ -59,7 +59,7 @@ test("the log kept in flash outlives unplugging the adapter", async ({ page, ada
 });
 
 
-test("detailed link diagnostics are saved live and shown in the report", async ({ page, adapter }) => {
+test("detailed controller diagnostics are saved live and shown in the report", async ({ page, adapter }) => {
     await connect(page);
     await showPanel(page, "#button-toggleDiagnostics");
     const box = page.locator("#dongle-linkDiagnostics");

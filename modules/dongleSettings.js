@@ -23,7 +23,7 @@
  *  Pico's LED, an external RGB LED on the Pico, the hybrid ESP32's LED and an external RGB LED on
  *  the ESP32 on (0 / 1), then the RGB LEDs' brightness (1-255).
  *  Version 7, byte 23: keep the log in flash (panel "diagnostics", saved live).
- *  Version 8, byte 7 (unused since version 3): detailed link diagnostics (panel "diagnostics",
+ *  Version 8, byte 7 (unused since version 3): detailed controller diagnostics (panel "diagnostics",
  *  saved live). Same 24 bytes as version 7.
  */
 import { Capabilities } from "./capabilities.js";
@@ -115,7 +115,7 @@ export class DongleSettings {
         },
         {
             key: "linkDiagnostics", offset: 7, since: 8, capability: Capabilities.BLUETOOTH, panel: "diagnostics",
-            label: "Detailed link diagnostics",
+            label: "Detailed controller diagnostics",
             tip: "The report also shows each Bluetooth controller's signal (RSSI), the channels in use, failed contacts, the transmit power and the controller's Bluetooth chip. The adapter asks the radio for them about once a second; leave it off unless you are looking into a connection problem.",
         },
         {
