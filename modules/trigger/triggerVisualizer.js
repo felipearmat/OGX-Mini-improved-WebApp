@@ -18,8 +18,9 @@ export class TriggerVisualizer {
         this.#settings.draw(triggerSettings);
     }
 
-    drawInput(value, settings = null, preview = false) {
-        this.#input.draw(value, settings, preview);
+    // dual: as JoystickVisualizer.drawInput (grey = the controller's own, green = with these settings).
+    drawInput(value, settings = null, dual = false) {
+        this.#input.draw(value, settings, dual);
     }
 }
 
@@ -30,6 +31,8 @@ class Input {
 
         this.colors = {
             inputBar: 'rgba(44, 44, 255, 0.91)',
+            raw: 'rgba(110, 110, 110, 0.85)',
+            shaped: 'rgba(30, 150, 60, 0.95)',
             stroke: 'rgba(0, 0, 0, 0.72)',
         }
         this.strokeWidth = 4;
@@ -37,25 +40,19 @@ class Input {
         this.lastValue = -2;
     }
 
-    draw(value, settings, preview) {
-        let { canvas, context, colors, lastValue, barWidth, strokeWidth } = this;
-
-        if (settings && preview) {
-            value = applySettings(value, settings.dzInner, settings.dzOuter, settings.antiDzInner, settings.antiDzOuter, settings.curve);
+    draw(value, settings, dual) {
+        const { canvas, context, colors, barWidth, strokeWidth } = this;
+        const shaped = dual && settings
+            ? applySettings(value, settings.dzInner, settings.dzOuter, settings.antiDzInner, settings.antiDzOuter, settings.curve)
+            : value;
+        const width = canvas.width - barWidth;
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        if (dual) {
+            DrawUtils.drawRectangle(context, value * width, 0, barWidth, canvas.height, colors.raw);
+            DrawUtils.drawRectangle(context, shaped * width, 0, barWidth, canvas.height, colors.shaped);
+        } else {
+            DrawUtils.drawRectangle(context, value * width, 0, barWidth, canvas.height, colors.inputBar);
         }
-
-        if (value !== lastValue) {
-            lastValue = value;
-
-            const width = canvas.width - barWidth;
-
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            const x = value * width;
-            const y = 2;
-
-            DrawUtils.drawRectangle(context, x, 0, barWidth, canvas.height, colors.inputBar);
-        }
-
         DrawUtils.drawRectangle(context, 0, 0, canvas.width, canvas.height, null, colors.stroke, strokeWidth);
     }
 }

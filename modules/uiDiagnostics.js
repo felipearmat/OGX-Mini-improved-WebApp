@@ -68,8 +68,8 @@ export const UIDiagnostics = {
         this.built = true;
     },
 
-    /* "Keep the log in flash" (Adapter Options version 7, applied live like the Status LED
-     * options): built once the adapter's record is known. */
+    /* "Keep the log in flash" (Adapter Options version 7) and "Detailed controller diagnostics"
+     * (version 8, needs the first), applied live: built once the adapter's record is known. */
     optionsBuilt: false,
 
     initOptions(dongleSettings, saveLive) {

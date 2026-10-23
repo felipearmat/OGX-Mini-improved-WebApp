@@ -71,16 +71,6 @@ select:disabled {
     border-bottom: #000000 1px solid;
 }
 
-.programPanel button:disabled {
-    background-color: #e9ecef;
-    color: #6c757d;
-    cursor: not-allowed;
-}
-
-.programLogPanel {
-    margin-top: 20px;
-}
-
 .connectPanel {
     margin-bottom: 20px;
 }
@@ -93,8 +83,7 @@ select:disabled {
     border-bottom: #000000 1px solid;
 }
 
-.connectPanel button,
-.programPanel button {
+.connectPanel button {
     background-color: var(--primary-color);
     color: #fff;
     border: none;
@@ -654,3 +643,6 @@ select:disabled {
 .modeColorPickHint { margin-left: 6px; opacity: 0.75; font-size: 0.9em; }
 /* The diagnostics options first, apart from the measurements below them. */
 #diagOptionsInput { margin-bottom: 12px; }
+.axisLegend { display: block; margin: 4px 0 8px; font-size: 0.9em; }
+.axisLegend .axisRaw { color: rgb(110, 110, 110); }
+.axisLegend .axisShaped { color: rgb(30, 150, 60); }

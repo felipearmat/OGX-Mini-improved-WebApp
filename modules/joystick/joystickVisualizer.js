@@ -18,8 +18,11 @@ export class JoystickVisualizer {
         this.#settings.draw(joystickSettings);
     }
 
-    drawInput(joyX, joyY, settings = null, preview = false) {
-        this.#cursor.draw(joyX, joyY, settings, preview);
+    // dual: the input is the controller's own (firmware with RAW_LIVE_INPUT): a grey dot there
+    // and a green one with these settings applied (what the game gets). Otherwise one dot, as it
+    // arrives (older firmware applies the saved settings itself).
+    drawInput(joyX, joyY, settings = null, dual = false) {
+        this.#cursor.draw(joyX, joyY, settings, dual);
     }
 }
 
@@ -33,14 +36,25 @@ class Cursor {
 
         this.colors = {
             cursor: 'rgba(0, 0, 255, 0.91)',
+            raw: 'rgba(110, 110, 110, 0.85)',
+            shaped: 'rgba(30, 150, 60, 0.95)',
         }
-        this.lastJoy = { x: -2, y: -2 };
+        this.lastKey = "";
     }
 
-    draw(joyX, joyY, settings = null, preview = false) {
-        const { canvas, context, centerX, centerY, maxRadius, colors, lastJoy } = this;
+    dot(x, y, color) {
+        const { context, centerX, centerY, maxRadius } = this;
+        context.beginPath();
+        context.arc(centerX + x * maxRadius, centerY + y * maxRadius, 5, 0, Math.PI * 2);
+        context.fillStyle = color;
+        context.fill();
+        context.closePath();
+    }
 
-        if (preview && settings) {
+    draw(joyX, joyY, settings = null, dual = false) {
+        const { canvas, context, colors } = this;
+        let shapedX = joyX, shapedY = joyY;
+        if (dual && settings) {
             const scaled = applyJoystickSettings(
                 joyX, joyY,
                 settings.dzInner, settings.antiDzInnerC, 
@@ -50,29 +64,20 @@ class Cursor {
                 settings.diagonalScaleMin, settings.diagonalScaleMax, settings.uncapRadius,
                 settings.invertY, settings.invertX
             );
-            joyX = scaled.x;
-            joyY = scaled.y;
-
-            // console.log(`Preview: ${joyX}, ${joyY}`);
+            shapedX = scaled.x;
+            shapedY = scaled.y;
         }
-
-        if (joyX !== lastJoy.x || joyY !== lastJoy.y) {
-            lastJoy.x = joyX;
-            lastJoy.y = joyY;
-
-            context.clearRect(0, 0, canvas.width, canvas.height);
-        
-            let canvasJoyX = joyX * maxRadius;
-            let canvasJoyY = joyY * maxRadius;
-            
-            canvasJoyX += centerX;
-            canvasJoyY += centerY;
-        
-            context.beginPath();
-            context.arc(canvasJoyX, canvasJoyY, 5, 0, Math.PI * 2);
-            context.fillStyle = colors.cursor;
-            context.fill();
-            context.closePath();
+        const key = `${dual}:${joyX}:${joyY}:${shapedX}:${shapedY}`;
+        if (key === this.lastKey) {
+            return;
+        }
+        this.lastKey = key;
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        if (dual) {
+            this.dot(joyX, joyY, colors.raw);
+            this.dot(shapedX, shapedY, colors.shaped);
+        } else {
+            this.dot(joyX, joyY, colors.cursor);
         }
     }
 }

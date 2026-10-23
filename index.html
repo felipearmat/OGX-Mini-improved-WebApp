@@ -25,33 +25,8 @@
             <h3>Settings</h3>
             <button class="connectButton" id="connectUsb">Connect via USB</button>
             <button class="connectButton" id="connectBt">Connect via Bluetooth</button><br><br>
-            <label><b>Minimum firmware required:</b> OGX-Mini v1.0.0-alpha3. Adapter Options need <a href="https://github.com/felipearmat/OGX-Mini-improved">OGX-Mini-improved</a> firmware.</label><br><br>
-            <label><b>Note:</b> To ensure your OGX-Mini (wired) adapter is in D-Input/Debug mode, hold Start + Right Bumper + D-pad Left for 3 seconds.</label>
-            <div class="separator"></div>
-            <h3>Update Firmware: OGX-Mini Wireless (original)</h3>
-            <label>For the original OGX-Mini Wireless (RP2040 + ESP32) only. An OGX-Mini-improved adapter
-                takes the UF2 for its board from the <a href="https://github.com/felipearmat/OGX-Mini-improved/releases">releases page</a>;
-                the RP2040 + ESP32 adapter's ESP32 is flashed through the adapter with
-                <code>Tools/hybrid/ogxm_hybrid.py flash-esp32</code>.</label><br><br>
-            <button class="" id="connectOgxmW">OGX-Mini Wireless (original)</button>
-        </div>
-
-        <div class="programPanel hidden" id="programPanel">
-            <label>
-                <img src="images/OGXMW-Boot.jpg" alt="OGX-Mini Boot Button" width="300" height="300">
-                <div class="separator"></div>
-                <b>Step 1:</b> Hold down the <b>BOOT</b> button on your OGX-Mini Wireless while plugging it into your computer.<br>
-                <b>Step 2:</b> Click <b>Update Part 1</b> and select the <b>RPI-RP2</b> drive from your file explorer.<br>
-                <b>Step 3:</b> Click <b>Update Part 2</b> and select <b>OGX-Mini</b> from the dropdown menu.<br><br>
-                <b>Note:</b> Do not remove your adapter while it is being updated. If the update fails, remove the adapter and plug it back in while holding the BOOT button, then reload this page to restart the process.<br>
-            </label>
-            <div class="separator"></div>
-            <button id="button-programPico">Update Part 1</button>
-            <button id="button-programEsp32">Update Part 2</button>
-
-            <div class="programLogPanel">
-                <textarea id="programLog" rows="16" cols="80" readonly></textarea>
-            </div>
+            <label>Needs the <a href="https://github.com/felipearmat/OGX-Mini-improved">OGX-Mini-improved</a> firmware; with the original OGX-Mini firmware only profiles and mappings work.</label><br><br>
+            <label><b>Note:</b> The adapter must be in D-Input/Debug mode: hold Start + Right Bumper + D-pad Left for 3 seconds.</label>
         </div>
 
         <div class="settingsPanel hidden" id="settingsPanel">
@@ -64,7 +39,7 @@
                     <li>Adapter Options, Bluetooth search, Mode Enabled, Rumble Test and the Mouse + Keyboard
                         mapping are not shown;</li>
                     <li>Mouse + Keyboard is not an output mode it can switch to;</li>
-                    <li>the Touchpad panel stays empty and Diagnostics has no report;</li>
+                    <li>the Touchpad and Motion panel stays empty and Diagnostics has no report;</li>
                     <li>the green highlight follows the button each input is mapped to, not the controller's
                         own button.</li>
                 </ul>
@@ -106,7 +81,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="section">
+                <div class="section" id="playerSection">
                     <div class="header">
                         <h3>Gamepads</h3>
                     </div>
@@ -140,7 +115,7 @@
                         </div>
                     </div>
                     <div class="sensorBlock">
-                        <label>Motion (prototype): the box turns with the controller. Lay it flat, press Start, then Recentre.</label>
+                        <label>Motion: the box turns with the controller. Lay it flat, press Start, then Recentre.</label>
                         <div class="motionStage">
                             <div class="motionCamera">
                                 <div id="motionBox" class="motionBox">
@@ -174,15 +149,12 @@
             </div>
 
             <div class="axisSettingsPanel" id="axisSettingsPanel">
+                <label class="axisLegend hidden" id="axisLegend"><span class="axisRaw">●</span> the controller's own position &nbsp; <span class="axisShaped">●</span> with these settings (what the game gets)</label>
                 <div class="joystickPanel">
                     <div class="leftPanel">
                         <div class="headerButtonPair">
                             <div class="header">
                                 <h4>Left Joystick</h4>
-                            </div>
-                            <div class="button">
-                                <label for="checkbox-previewJoy-left">Preview</label>
-                                <input type="checkbox" id="checkbox-previewJoy-left" class="invertCheckbox">
                             </div>
                         </div>
                         <div class="canvasContainer">
@@ -198,10 +170,6 @@
                         <div class="headerButtonPair">
                             <div class="header">
                                 <h4>Right Joystick</h4>
-                            </div>
-                            <div class="button">
-                                <label for="checkbox-previewJoy-right">Preview</label>
-                                <input type="checkbox" id="checkbox-previewJoy-right" class="invertCheckbox">
                             </div>
                         </div>
                         <div class="canvasContainer">
@@ -221,10 +189,6 @@
                             <div class="header">
                                 <h4>Left Trigger</h4>
                             </div>
-                            <div class="button">
-                                <label for="checkbox-previewTrigger-left">Preview</label>
-                                <input type="checkbox" id="checkbox-previewTrigger-left" class="invertCheckbox">
-                            </div>
                         </div>
                         <div class="canvasContainer">
                             <canvas id="canvasTriggerBackground-left" width="300" height="50"></canvas>
@@ -239,10 +203,6 @@
                         <div class="headerButtonPair">
                             <div class="header">
                                 <h4>Right Trigger</h4>
-                            </div>
-                            <div class="button">
-                                <label for="checkbox-previewTrigger-right">Preview</label>
-                                <input type="checkbox" id="checkbox-previewTrigger-right" class="invertCheckbox">
                             </div>
                         </div>
                         <div class="canvasContainer">

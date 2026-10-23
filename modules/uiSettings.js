@@ -5,6 +5,7 @@ import { TriggerVisualizer } from "./trigger/triggerVisualizer.js";
 import { UserSettings } from "./userSettings.js";
 import { ModeView } from "./modeView.js";
 import { KbmSettings } from "./kbmSettings.js";
+import { Capabilities, capabilities } from "./capabilities.js";
 
 const SliderSnapThreshold = 0.02;
 
@@ -378,19 +379,6 @@ function uiSetupHidePanelListeners() {
     });
 }
 
-function uiSetupAxisPreviewCheckboxes(userSettings) {
-    const tip = "To get an accurate preview, reset the profile to defaults and save it before enabling this feature.";
-
-    let elements = [];
-    elements.push(document.getElementById("checkbox-previewJoy-left"));
-    elements.push(document.getElementById("checkbox-previewJoy-right"));
-    elements.push(document.getElementById("checkbox-previewTrigger-left"));
-    elements.push(document.getElementById("checkbox-previewTrigger-right"));
-
-    elements.forEach(element => {
-        element.title = tip;
-    });
-}
 
 export const UI = {
 
@@ -438,7 +426,6 @@ export const UI = {
 
         uiSetupGeneralSettings(userSettings);
         uiGenerateButtonSettings(userSettings);
-        uiSetupAxisPreviewCheckboxes(userSettings);
         uiSetupHidePanelListeners();
 
         const loadDefaultButton = document.getElementById("button-loadDefaults");
@@ -549,6 +536,8 @@ export const UI = {
         if (elementPlayerIdx) {
             elementPlayerIdx.value = userSettings.playerIdx;
         }
+        // Which player's profile: only with more than one (this firmware has MAX_GAMEPADS 1).
+        document.getElementById("playerSection")?.classList.toggle("hidden", !(userSettings.maxGamepads > 1));
         if (elementDeviceMode) {
             elementDeviceMode.value = userSettings.deviceMode;
         }
@@ -701,15 +690,14 @@ export const UI = {
         let triggerL = gamepad.scaledTriggerL();
         let triggerR = gamepad.scaledTriggerR();
 
-        const prevJoyL = document.getElementById("checkbox-previewJoy-left").checked;
-        const prevJoyR = document.getElementById("checkbox-previewJoy-right").checked;
-        const prevTrigL = document.getElementById("checkbox-previewTrigger-left").checked;
-        const prevTrigR = document.getElementById("checkbox-previewTrigger-right").checked;
+        // The controller's own input (firmware with RAW_LIVE_INPUT) shown with these settings too.
+        const dual = capabilities.known && (capabilities.mask & Capabilities.RAW_LIVE_INPUT) !== 0;
+        document.getElementById("axisLegend")?.classList.toggle("hidden", !dual);
 
-        joyVisualizerL.drawInput(joyLx, joyLy, userSettings.profile[`joystickSettings-left`], prevJoyL);
-        joyVisualizerR.drawInput(joyRx, joyRy, userSettings.profile[`joystickSettings-right`], prevJoyR);
-        trigVisualizerL.drawInput(triggerL, userSettings.profile[`triggerSettings-left`], prevTrigL);
-        trigVisualizerR.drawInput(triggerR, userSettings.profile[`triggerSettings-right`], prevTrigR);
+        joyVisualizerL.drawInput(joyLx, joyLy, userSettings.profile[`joystickSettings-left`], dual);
+        joyVisualizerR.drawInput(joyRx, joyRy, userSettings.profile[`joystickSettings-right`], dual);
+        trigVisualizerL.drawInput(triggerL, userSettings.profile[`triggerSettings-left`], dual);
+        trigVisualizerR.drawInput(triggerR, userSettings.profile[`triggerSettings-right`], dual);
         this.highlightInputs(gamepad, userSettings);
     },
 
@@ -723,12 +711,6 @@ export const UI = {
         const connectButtonBt = document.getElementById("connectBt");
         if (connectButtonBt) {
             connectButtonBt.disabled = !enabled;
-        } else {
-            console.warn("Connect button not found.");
-        }
-        const programButton = document.getElementById("connectOgxmW");
-        if (programButton) {
-            programButton.disabled = !enabled;
         } else {
             console.warn("Connect button not found.");
         }

@@ -17,6 +17,8 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
   - Use a MAC address per controller (PS4 / STEAM modes)
   - Legacy PS4 motion scale (Brook auth adapters)
   - Joy-Con pair rumble: per side (as SDL / Steam) or both Joy-Cons
+  - Status LEDs on / off (the Pico's own, an external RGB LED on the Pico, the RP2040 + ESP32
+    adapter's ESP32 LED and its external RGB LED) and the RGB LEDs' brightness
   - Single controller (firmware from before the Bluetooth search times only)
 
   Options the adapter's hardware can't use (the Joy-Con options on a wired-only adapter, the
@@ -58,13 +60,18 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
 - **Live input in the mappings**: each mapping row (D-pad, buttons, analog, Mouse + Keyboard)
   lights up green while its controller input is pressed — the controller's own button, whatever it
   is mapped to (OGX-Mini-improved firmware sends unmapped input in D-Input/Debug mode while the web app is open).
+- **Axis Settings, two dots**: with firmware that has the capability `RAW_LIVE_INPUT` (it sends
+  the sticks and triggers without the profile's stick / trigger settings while the web app is
+  open), each stick shows a grey dot where the controller is and a green one with the settings
+  being edited applied (what the game gets), and each trigger a grey and a green mark, all the
+  time; the old *Preview* boxes are gone. With older firmware, one dot as the input arrives.
 - **Rumble Test** (USB): plays a rumble on the connected controller the way a game asks for it —
   left (strong) motor, right (weak) motor or both, at a chosen strength (5-100 %) for a chosen time
   (0.1-5 s), plus Stop. USB packet `SET_GP_OUT` (0x81): left, right, duration in ms (uint16 LE);
   the adapter answers with an empty `SET_GP_OUT`. Not over Bluetooth: the adapter stops BLE
   advertising while a Bluetooth Classic controller (Joy-Con, DS4...) is connected. Shown only for
   device modes that pass a game's rumble to the controller (Xbox OG, Steel Battalion, XInput, PS3,
-  Switch, PS4, STEAM, and Web App itself).
+  Switch, PS4, STEAM, and D-Input/Debug itself).
 - **Diagnostics** (USB, D-Input/Debug mode): what the adapter measures for each controller — link
   (Bluetooth Classic / LE interval, Bluetooth version, wired or 2.4 GHz receiver), reports per
   second, late and lost reports, largest gap, signal and radio channels in use — and the summary
@@ -119,7 +126,8 @@ the firmware's own web app protocol and settings code built for the computer
 adapter is a USB disconnect for the page, and the adapter comes back with its settings, as the
 board does. They cover connecting, profiles saved across a restart, a mode change away from
 D-Input/Debug and its combo back, live options without a restart, an option that needs one, the
-status LEDs and mode colours (checked on the adapter's LED), the mouse + keyboard mapping and the
+status LEDs (saved with Adapter Options, across the restart) and mode colours, the colour code box
+(checked on the adapter's LED), the motion view's live stream, the mouse + keyboard mapping and the
 diagnostics panel and report.
 
 The setup builds the virtual adapter from `../OGX-Mini-improved` (CMake and a C++20 compiler; the

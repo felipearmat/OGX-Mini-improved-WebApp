@@ -5,6 +5,8 @@ test("connects over USB and reads the adapter", async ({ page }) => {
     await expect(page.locator("#dropdown-deviceMode")).toHaveValue("6");  // D-Input/Debug, the mode the web app talks to
     await expect(page.locator("#firmwareWarning")).toBeHidden();
     await expect(page.locator("#ledBrightnessRow")).toBeAttached();
+    await expect(page.locator("#connectOgxmW")).toHaveCount(0);  // the original OGX-Mini Wireless flasher is gone
+    await expect(page.locator("#playerSection")).toBeHidden();   // one player (MAX_GAMEPADS 1): no chooser
     await expect(page.locator("#modeColorRow")).toBeVisible();
 });
 

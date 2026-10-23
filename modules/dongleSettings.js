@@ -158,7 +158,7 @@ export class DongleSettings {
         this.values.reducedSearchSeconds = DongleSettings.SEARCH_NO_LIMIT;
         // Version 4: idle turn-off, saved live too.
         this.values.idleOffMinutes = 15;
-        // Version 6: the RGB status LED's brightness, saved live (Status LED panel).
+        // Version 6: the RGB status LEDs' brightness (Adapter Options, saved with its button).
         this.values.statusLedBrightness = DongleSettings.BRIGHTNESS_DEFAULT;
         for (const option of DongleSettings.OPTIONS) {
             if (option.defaultValue !== undefined) {
