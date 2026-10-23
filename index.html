@@ -93,7 +93,11 @@
                                 <span class="modeColorMarker" id="modeColorMarker"></span>
                             </div>
                             <div class="modeColorSide">
-                                <div class="modeColorValue" id="modeColorValue"></div>
+                                <div class="modeColorValue" id="modeColorValue">
+                                    <input type="text" id="modeColorHex" class="modeColorHex" maxlength="7" spellcheck="false"
+                                        aria-label="Colour code (#rrggbb)" placeholder="#RRGGBB">
+                                    <span class="modeColorPickHint">shown on the adapter while you pick</span>
+                                </div>
                                 <div class="modeComboHint">Around the wheel: the colour. Towards the centre: lighter.</div>
                                 <button class="controlsButton" id="button-modeColorSave" type="button">Save colour</button>
                                 <button class="controlsButton" id="button-modeColorDefault" type="button">Default</button>

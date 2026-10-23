@@ -14,8 +14,20 @@ test("the picked colour shows on the adapter, cancel restores it", async ({ page
     await page.locator("#button-modeColor").click();
     await expect(page.locator("#modeColorPicker")).toBeVisible();
     await pickOnWheel(page, 0, 0.98);  // red
-    await expect(page.locator("#modeColorValue")).toHaveText(/^#FF/);
+    await expect(page.locator("#modeColorHex")).toHaveValue(/^#FF/);
     await expect.poll(() => adapter.led).toMatch(/^30[01][0-9a-f][01][0-9a-f]$/);  // red at brightness 48
+    await page.locator("#button-modeColorCancel").click();
+    await adapter.waitLed("303030");
+});
+
+test("a colour code typed in moves the wheel and shows on the adapter", async ({ page, adapter }) => {
+    await connect(page);
+    await page.locator("#button-modeColor").click();
+    await page.locator("#modeColorHex").fill("#00FF00");
+    await expect.poll(() => adapter.led).toBe("003000");  // green at brightness 48
+    // The marker sits at green: 120 degrees on the wheel's edge (left 25 %, top about 93 %).
+    const style = await page.locator("#modeColorMarker").getAttribute("style");
+    expect(style).toMatch(/left: 25%/);
     await page.locator("#button-modeColorCancel").click();
     await adapter.waitLed("303030");
 });

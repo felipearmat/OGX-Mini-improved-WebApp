@@ -234,6 +234,22 @@ export const UILed = {
         });
         wheel.addEventListener("pointermove", (event) => dragging && pick(event));
         wheel.addEventListener("pointerup", () => { dragging = false; });
+        // A colour code typed in (#rrggbb or rrggbb): the wheel's marker moves to it.
+        const code = document.getElementById("modeColorHex");
+        code?.addEventListener("input", () => {
+            const m = /^#?([0-9a-f]{6})$/i.exec(code.value.trim());
+            code.classList.toggle("invalid", !m);
+            if (m) {
+                const n = parseInt(m[1], 16);
+                this.picking = [(n >> 16) & 0xFF, (n >> 8) & 0xFF, n & 0xFF];
+                this._showPicking();
+                this._preview();
+            }
+        });
+        code?.addEventListener("blur", () => {
+            code.classList.remove("invalid");
+            this._showPicking();
+        });
         document.getElementById("button-modeColorSave")?.addEventListener("click", () => this._save(this.picking));
         document.getElementById("button-modeColorDefault")?.addEventListener("click", () => this._save([0, 0, 0]));
         document.getElementById("button-modeColorCancel")?.addEventListener("click", () => {
@@ -293,8 +309,12 @@ export const UILed = {
     _showPicking() {
         const status = document.getElementById("modeColorValue");
         if (status && this.picking) {
-            status.textContent = `${hex(this.picking).toUpperCase()} - shown on the adapter while you pick`;
             status.style.setProperty("--swatch", hex(this.picking));
+        }
+        // The code box follows the wheel, except while it is being typed in.
+        const code = document.getElementById("modeColorHex");
+        if (code && this.picking && document.activeElement !== code) {
+            code.value = hex(this.picking).toUpperCase();
         }
         const marker = document.getElementById("modeColorMarker");
         if (marker && this.picking) {

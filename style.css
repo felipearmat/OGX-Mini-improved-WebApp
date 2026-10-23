@@ -648,3 +648,7 @@ select:disabled {
 /* An option that needs the one above it: indented, greyed out while that one is off. */
 .dongleOption.dependentOption { padding-left: 1.5rem; }
 .dongleOption.disabledOption { opacity: 0.45; }
+/* The colour code box below the wheel: type a code (#rrggbb) or see the picked one. */
+.modeColorHex { width: 6.5em; font: inherit; font-variant-numeric: tabular-nums; text-transform: uppercase; }
+.modeColorHex.invalid { outline: 2px solid #c0392b; }
+.modeColorPickHint { margin-left: 6px; opacity: 0.75; font-size: 0.9em; }
