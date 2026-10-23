@@ -652,3 +652,5 @@ select:disabled {
 .modeColorHex { width: 6.5em; font: inherit; font-variant-numeric: tabular-nums; text-transform: uppercase; }
 .modeColorHex.invalid { outline: 2px solid #c0392b; }
 .modeColorPickHint { margin-left: 6px; opacity: 0.75; font-size: 0.9em; }
+/* The diagnostics options first, apart from the measurements below them. */
+#diagOptionsInput { margin-bottom: 12px; }
