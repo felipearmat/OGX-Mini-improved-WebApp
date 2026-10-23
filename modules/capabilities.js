@@ -19,6 +19,7 @@ export class Capabilities {
     static MODE_COLORS = 1 << 13;           // colour per output mode (USB only)
     static STATUS_LED_ESP32_EXT = 1 << 14;  // an external RGB LED on the hybrid ESP32 (GPIO 4)
     static FLASH_LOG = 1 << 15;             // the log also kept in flash (Diagnostics panel)
+    static MOTION_STREAM = 1 << 16;         // live motion with the live input (GP_MOTION, USB)
 
     static NOTE = "Not supported on this adapter's hardware.";
 

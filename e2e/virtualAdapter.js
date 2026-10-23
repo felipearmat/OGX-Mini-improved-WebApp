@@ -155,6 +155,14 @@ export class VirtualAdapter {
         }
     }
 
+    // A controller's motion as the firmware holds it (motion source, DS4 units), sent to the page
+    // as live input (GP_MOTION).
+    motion(source, accel, gyro) {
+        if (this.child) {
+            this.child.stdio[3].write(`P${source} ${accel.join(" ")} ${gyro.join(" ")}\n`);
+        }
+    }
+
     // Waits until the external status LED shows the colour ("rrggbb").
     async waitLed(rgb, timeoutMs = 5000) {
         const deadline = Date.now() + timeoutMs;

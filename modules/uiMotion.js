@@ -1,18 +1,23 @@
-/*  "Motion" panel (OGX-Mini-improved firmware, USB, prototype): a box that turns with the
- *  controller, as Yuzu-based emulators show it. Fed by the diagnostics report's "motion" block
- *  (the newest sample, in the DS4 report frame: X right, Y out of the face, Z toward the player;
- *  accel in mg, gyro in deg/s x10), asked for again as soon as the last answer arrives, so it
- *  updates only a few times a second: the firmware's live motion stream (ROADMAP item 0) will
- *  replace the polling. The orientation integrates the gyro and leans toward gravity (Mahony
- *  filter); "Recentre" starts again from the tilt gravity gives, facing forward. */
+import { Capabilities, capabilities } from "./capabilities.js";
+/*  Motion view in the "Touchpad and Motion" panel (OGX-Mini-improved firmware, USB): a box that
+ *  turns with the controller, as Yuzu-based emulators show it. Motion arrives in the common frame
+ *  every pad is converted to (X right, Y out of the face, Z toward the player; accel in mg, gyro
+ *  in deg/s x10):
+ *  - firmware with live motion (capability MOTION_STREAM): the GP_MOTION packet (0x83) with each
+ *    live input, timed by the adapter's clock;
+ *  - older firmware: the diagnostics report's "motion" block, asked for again as soon as each
+ *    answer arrives (a few updates a second).
+ *  The orientation integrates the gyro and leans toward gravity (Mahony filter); "Recentre" starts
+ *  again from the tilt gravity gives, facing forward. */
 export const UIMotion = {
     request: null,
     running: false,
     q: [1, 0, 0, 0],          // orientation (w, x, y, z), controller frame -> screen frame
-    lastMs: 0,
-    samples: 0,
+    lastMs: 0,                // time of the last sample (adapter ms with the stream, page ms polling)
+    updates: 0,
     rateStartMs: 0,
     lastSampleCount: -1,
+    recentreNext: true,
     KP: 1.0,                   // gravity correction gain (1/s)
 
     init(requestFunc) {
@@ -21,7 +26,7 @@ export const UIMotion = {
         document.getElementById("button-motionRecentre").addEventListener("click", () => {
             this.recentreNext = true;
         });
-        // Shown with the touchpad ("Touchpad and Motion"): hiding the panel stops asking.
+        // Shown with the touchpad ("Touchpad and Motion"): hiding the panel stops it.
         document.getElementById("button-toggleTouchpad").addEventListener("click", () => {
             const panel = document.getElementById("touchpadPanel");
             if (panel.classList.contains("hidden") && this.running) {
@@ -29,6 +34,10 @@ export const UIMotion = {
             }
         });
         this.render();
+    },
+
+    streaming() {
+        return capabilities.known && (capabilities.mask & Capabilities.MOTION_STREAM) !== 0;
     },
 
     setStatus(text) {
@@ -40,14 +49,19 @@ export const UIMotion = {
         if (this.running) {
             this.running = false;
             button.textContent = "Start";
+            this.setStatus("Stopped.");
             return;
         }
         this.running = true;
         button.textContent = "Stop";
         this.recentreNext = true;
         this.lastMs = 0;
-        this.samples = 0;
+        this.updates = 0;
         this.rateStartMs = performance.now();
+        if (this.streaming()) {
+            this.setStatus("Waiting for motion: connect a controller with motion (DS4, DualSense, Joy-Con, Switch Pro...).");
+            return;  // feed() takes each GP_MOTION packet
+        }
         while (this.running) {
             const report = await this.request();
             if (!this.running) {
@@ -64,32 +78,41 @@ export const UIMotion = {
                 await new Promise((r) => setTimeout(r, 300));
                 continue;
             }
-            this.update(m);
+            const fresh = m.samples !== this.lastSampleCount;
+            this.lastSampleCount = m.samples;
+            this.update(m.accel_mg, m.gyro_dps_x10, performance.now(), fresh, "the diagnostics report (older firmware)");
         }
-        this.setStatus("Stopped.");
     },
 
-    update(m) {
-        const now = performance.now();
-        const accel = m.accel_mg.map((v) => v / 1000);           // g
-        const gyro = m.gyro_dps_x10.map((v) => v / 10);          // deg/s
-        const fresh = m.samples !== this.lastSampleCount;
-        this.lastSampleCount = m.samples;
+    // GP_MOTION: source (u8), accel mg (i16 x3), gyro deg/s x10 (i16 x3), adapter ms (u32).
+    feed(bytes) {
+        if (!this.running || bytes.length < 17) {
+            return;
+        }
+        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        const accel = [0, 1, 2].map((i) => view.getInt16(1 + 2 * i, true));
+        const gyro = [0, 1, 2].map((i) => view.getInt16(7 + 2 * i, true));
+        this.update(accel, gyro, view.getUint32(13, true), true, "the live stream");
+    },
+
+    update(accelMg, gyroDpsX10, nowMs, fresh, from) {
+        const accel = accelMg.map((v) => v / 1000);           // g
+        const gyro = gyroDpsX10.map((v) => v / 10);           // deg/s
         if (this.recentreNext) {
             this.q = this.tiltFromGravity(accel);
             this.recentreNext = false;
         } else if (this.lastMs && fresh) {
-            const dt = Math.min((now - this.lastMs) / 1000, 0.5);
+            const dt = Math.min(Math.max((nowMs - this.lastMs) / 1000, 0), 0.5);
             this.integrate(gyro, accel, dt);
         }
-        this.lastMs = now;
-        this.samples++;
-        const secs = (now - this.rateStartMs) / 1000;
-        const rate = secs > 0 ? this.samples / secs : 0;
+        this.lastMs = nowMs;
+        this.updates++;
+        const secs = (performance.now() - this.rateStartMs) / 1000;
+        const rate = secs > 0 ? this.updates / secs : 0;
         const fmt = (a, d) => a.map((v) => v.toFixed(d).padStart(7)).join(" ");
         document.getElementById("motionAccel").textContent = `accel g   X Y Z ${fmt(accel, 2)}`;
         document.getElementById("motionGyro").textContent = `gyro deg/s X Y Z ${fmt(gyro, 1)}`;
-        this.setStatus(`${rate.toFixed(1)} updates/s from the diagnostics report (prototype: the live stream will be ~100/s).`);
+        this.setStatus(`${rate.toFixed(0)} updates/s from ${from}.`);
         this.render();
     },
 
@@ -107,7 +130,7 @@ export const UIMotion = {
     },
 
     integrate(gyroDps, accelG, dt) {
-        let [w, x, y, z] = this.q;
+        const [w, x, y, z] = this.q;
         let g = gyroDps.map((v) => (v * Math.PI) / 180);
         const an = Math.hypot(...accelG);
         if (an > 0.5 && an < 1.5) {

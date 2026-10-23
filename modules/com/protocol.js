@@ -20,6 +20,7 @@ export const PACKET_ID = Object.freeze({
     GET_FLASH_LOG: 0x7C,
     SET_GP_IN: 0x80,
     GP_TOUCH: 0x82,
+    GP_MOTION: 0x83,
     SET_GP_OUT: 0x81,
     RESP_ERROR: 0xFF
 });

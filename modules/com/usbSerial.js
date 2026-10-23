@@ -404,6 +404,10 @@ class USBManager {
                 UITouchpad.draw(bufferIn.subarray(0, dataLen));
                 break;
 
+            case PACKET_ID.GP_MOTION:
+                UIMotion.feed(bufferIn.subarray(0, dataLen));
+                break;
+
             case PACKET_ID.SET_GP_IN:
                 const gamepad = new Gamepad();
                 gamepad.setReportFromBytes(bufferIn.subarray(0, dataLen));
