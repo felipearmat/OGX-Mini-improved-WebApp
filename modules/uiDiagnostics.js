@@ -79,7 +79,8 @@ export const UIDiagnostics = {
         }
         for (const option of DongleSettings.OPTIONS.filter((o) => o.panel === "diagnostics")) {
             const row = document.createElement("div");
-            row.className = "dongleOption hidden";
+            // An option that needs the one above it (requires): indented, greyed out while that is off.
+            row.className = option.requires ? "dongleOption dependentOption hidden" : "dongleOption hidden";
             const id = `dongle-${option.key}`;
             const label = document.createElement("label");
             label.htmlFor = id;
@@ -91,6 +92,7 @@ export const UIDiagnostics = {
             box.id = id;
             box.addEventListener("change", () => {
                 dongleSettings.values[option.key] = box.checked ? 1 : 0;
+                this.updateOptions(dongleSettings);  // its dependent options follow
                 this.setStatus("Saving...");
                 saveLive(() => this.setStatus(`Saved (${new Date().toLocaleTimeString()}).`));
             });
@@ -112,6 +114,11 @@ export const UIDiagnostics = {
             const known = (option.since || 1) <= dongleSettings.version;
             row.classList.toggle("hidden", !known || !capabilities.supports(option.capability));
             box.checked = dongleSettings.values[option.key] !== 0;
+            if (option.requires) {
+                const needed = dongleSettings.values[option.requires] !== 0;
+                box.disabled = !needed;
+                row.classList.toggle("disabledOption", !needed);
+            }
         }
     },
 

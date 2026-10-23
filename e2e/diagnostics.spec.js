@@ -63,8 +63,17 @@ test("detailed controller diagnostics are saved live and shown in the report", a
     await connect(page);
     await showPanel(page, "#button-toggleDiagnostics");
     const box = page.locator("#dongle-linkDiagnostics");
+    const flash = page.locator("#dongle-keepLogInFlash");
     await expect(box).toBeVisible();
     await expect(box).not.toBeChecked();  // off by default
+    // It needs "Keep the log in flash": greyed out until that is on.
+    if (await flash.isChecked()) {
+        await flash.uncheck();
+        await expect(page.locator("#diagStatus")).toHaveText(/Saved/);
+    }
+    await expect(box).toBeDisabled();
+    await flash.check();
+    await expect(box).toBeEnabled();
     await box.check();
     await expect(page.locator("#diagStatus")).toHaveText(/Saved/);
     expect(adapter.restarts).toBe(0);  // applied live

@@ -114,14 +114,14 @@ export class DongleSettings {
             tip: "An RGB LED (WS2812B) on GPIO 4 of the ESP32 (RP2040 + ESP32 adapter), in the mode colour.",
         },
         {
-            key: "linkDiagnostics", offset: 7, since: 8, capability: Capabilities.BLUETOOTH, panel: "diagnostics",
-            label: "Detailed controller diagnostics",
-            tip: "The report also shows each Bluetooth controller's signal (RSSI), the channels in use, failed contacts, the transmit power and the controller's Bluetooth chip. The adapter asks the radio for them about once a second; leave it off unless you are looking into a connection problem.",
-        },
-        {
             key: "keepLogInFlash", offset: 23, since: 7, capability: Capabilities.FLASH_LOG, panel: "diagnostics",
             label: "Keep the log in flash",
             tip: "The adapter also saves its log in its flash memory, so what happened away from the computer (playing on a console) can be read afterwards: a log report includes it. It writes only while nothing is being played, and sparingly while playing.",
+        },
+        {
+            key: "linkDiagnostics", offset: 7, since: 8, capability: Capabilities.BLUETOOTH, panel: "diagnostics",
+            label: "Detailed controller diagnostics", requires: "keepLogInFlash",
+            tip: "The report also shows each Bluetooth controller's signal (RSSI), the channels in use, failed contacts, the transmit power and the controller's Bluetooth chip. The adapter asks the radio for them about once a second; leave it off unless you are looking into a connection problem. Needs \"Keep the log in flash\": the advanced report is kept there.",
         },
     ]);
 

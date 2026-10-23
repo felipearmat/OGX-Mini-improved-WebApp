@@ -645,3 +645,6 @@ select:disabled {
 /* A rule and some room between the touchpad and the motion box: two separate views. */
 .sensorBlock + .sensorBlock { border-top: 1px solid #ccc; padding-top: 20px; }
 .sensorBlock { min-width: 0; display: grid; gap: 6px; align-content: start; }
+/* An option that needs the one above it: indented, greyed out while that one is off. */
+.dongleOption.dependentOption { padding-left: 1.5rem; }
+.dongleOption.disabledOption { opacity: 0.45; }
