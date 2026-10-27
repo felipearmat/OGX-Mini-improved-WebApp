@@ -21,6 +21,7 @@ export class Capabilities {
     static FLASH_LOG = 1 << 15;             // the log also kept in flash (Diagnostics panel)
     static MOTION_STREAM = 1 << 16;         // live motion with the live input (GP_MOTION, USB)
     static RAW_LIVE_INPUT = 1 << 17;        // live input without stick / trigger settings (USB)
+    static RAW_CAPTURE = 1 << 18;           // raw Bluetooth input reports (RAW_CAPTURE / RAW_REPORT, USB; bench tools)
 
     static NOTE = "Not supported on this adapter's hardware.";
 
