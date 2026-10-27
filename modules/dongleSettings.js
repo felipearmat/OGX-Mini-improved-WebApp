@@ -84,9 +84,9 @@ export class DongleSettings {
         },
         {
             key: "joyconPairRumblePerSide", offset: 8, since: 2, capability: Capabilities.JOYCON,
-            label: "Joy-Con pair rumble",
+            label: "Joy-Con pair compatibility",
             choices: [{ label: "Per side (as SDL / Steam)", value: 1 }, { label: "Both Joy-Cons", value: 0 }],
-            help: "Per side: the game's left (strong) motor rumbles the left Joy-Con and the right (weak) motor the right one, as when the pair is connected straight to a PC. Both: each Joy-Con plays both motors.",
+            help: "Rumble of a Joy-Con pair in every mode but Switch. Per side: the game's left (strong) motor rumbles the left Joy-Con and the right (weak) motor the right one, as when the pair is connected straight to a PC. Both: each Joy-Con plays both motors. In Switch mode the pair plays the game's HD Rumble as on a Switch (each Joy-Con its own side), whatever this says.",
         },
         {
             key: "highTxPower", offset: 17, since: 5, capability: Capabilities.HIGH_TX_POWER, panel: "bluetooth",

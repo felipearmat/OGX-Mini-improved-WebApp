@@ -16,7 +16,7 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
   - Single Joy-Con orientation (vertical / horizontal)
   - Use a MAC address per controller (PS4 / STEAM modes)
   - Legacy PS4 motion scale (Brook auth adapters)
-  - Joy-Con pair rumble: per side (as SDL / Steam) or both Joy-Cons
+  - Joy-Con pair compatibility: rumble per side (as SDL / Steam) or on both Joy-Cons, in every mode but Switch (there the pair plays the game's HD Rumble as on a Switch)
   - Status LEDs on / off (the Pico's own, an external RGB LED on the Pico, the RP2040 + ESP32
     adapter's ESP32 LED and its external RGB LED) and the RGB LEDs' brightness
   - Single controller (firmware from before the Bluetooth search times only)
