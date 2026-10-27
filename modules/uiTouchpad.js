@@ -1,8 +1,10 @@
 /*  "Touchpad" panel (OGX-Mini-improved firmware, USB): where the fingers are on a DS4 /
  *  DualSense touchpad (a green ball per touch) and whether the touchpad is pressed. Fed by the
  *  GP_TOUCH packet (0x82): two touch points as the pads send them, 4 bytes each (bit 7 of the
- *  first byte set = not touching; X 12 bits, Y 12 bits), then the click byte. The touchpad press
- *  is the Misc button: its mapping row ("Touchpad press") is part of the panel. */
+ *  first byte set = not touching; X 12 bits, Y 12 bits), then the click byte. The press is the
+ *  touchpad's own in PS4, STEAM and Mouse + Keyboard modes and the Misc button in the others
+ *  (firmware since 2026-10-27; it was always Misc): its mapping row ("Touchpad press", the Misc
+ *  mapping) is part of the panel and lights up from the click byte. */
 export const UITouchpad = {
     // Touchpad coordinates: X 0-1919 on both pads, Y 0-942 (DS4) / 0-1079 (DualSense).
     MAX_X: 1920,
@@ -34,10 +36,17 @@ export const UITouchpad = {
             touches++;
         }
 
-        // The press is the Misc button: its mapping row lights up with the live input.
+        // The press: its mapping row lights up from the click byte (the firmware no longer sends it
+        // as Misc while the web app is open).
+        const pressed = bytes[8] !== 0;
+        const row = document.getElementById("dropdown-touchpadPress")?.parentElement;
+        if (row && row.classList.contains("inputActive") !== pressed) {
+            row.classList.toggle("inputActive", pressed);
+        }
         const status = document.getElementById("touchpadStatus");
         if (status) {
-            status.textContent = touches ? `${touches} finger${touches > 1 ? "s" : ""}` : "No finger on the touchpad";
+            const fingers = touches ? `${touches} finger${touches > 1 ? "s" : ""}` : "No finger on the touchpad";
+            status.textContent = pressed ? `${fingers}, pressed` : fingers;
         }
     },
 

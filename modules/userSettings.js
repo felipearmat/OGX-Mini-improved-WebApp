@@ -100,7 +100,7 @@ export class UserSettings {
         { type: "int", key: "buttonLb",          size: 2, def: 0x0100, label: "LB"    },
         { type: "int", key: "buttonRb",          size: 2, def: 0x0200, label: "RB"    },
         { type: "int", key: "buttonSys",         size: 2, def: 0x0400, label: "Sys"   },
-        { type: "int", key: "buttonMisc",        size: 2, def: 0x0800, label: "Misc / Touchpad press" },
+        { type: "int", key: "buttonMisc",        size: 2, def: 0x0800, label: "Misc (Capture; touchpad press without a touchpad)" },
         { type: "bool",key: "analogEnabled",     size: 1, def: true },
         { type: "int", key: "analogOffUp",       size: 1, def: 0, label: "Up"    },
         { type: "int", key: "analogOffDown",     size: 1, def: 1, label: "Down"  },

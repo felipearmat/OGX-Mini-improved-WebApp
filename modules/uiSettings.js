@@ -233,7 +233,9 @@ function uiGenerateButtonSettings(userSettings) {
         }
     });
 
-    /* Touchpad press (the Misc button) in the Touchpad panel too, kept in step with the Misc row. */
+    /* Touchpad press in the Touchpad panel: the Misc mapping, which the press takes in modes without
+     * a touchpad (PS4, STEAM and Mouse + Keyboard send it as the touchpad's own); kept in step with
+     * the Misc row. */
     const touchContainer = document.getElementById("touchpadPressInput");
     const miscField = buttonFields.find((field) => field.key === "buttonMisc");
     if (touchContainer && miscField) {
@@ -671,7 +673,6 @@ export const UI = {
             const digital = ["Up", "Down", "Left", "Right"].includes(name) ? `dpad${name}` : `button${name}`;
             mark(document.getElementById(`dropdown-${field.key}`)?.parentElement, pressed.has(digital));
         }
-        mark(document.getElementById("dropdown-touchpadPress")?.parentElement, pressed.has("buttonMisc"));
         KbmSettings.INPUT_KEYS.forEach((key, i) => {
             mark(document.getElementById(`kbm-action-${i}`)?.parentElement, pressed.has(key));
         });

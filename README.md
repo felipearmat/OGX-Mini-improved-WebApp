@@ -46,9 +46,10 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
   record, bytes 12-15 (bit mask by mode).
 - **Touchpad and Motion** (USB; PS4, STEAM, Mouse + Keyboard and D-Input/Debug modes; first section of the
   page): the DS4 / DualSense touchpad as the adapter reads it, a green ball per finger, and the
-  *Touchpad press* mapping row. The press is the Misc button (also listed as "Misc / Touchpad
-  press" in Digital Mappings), so it can be mapped like the other buttons and lights up while
-  pressed. USB packet `GP_TOUCH`
+  *Touchpad press* mapping row, lit while pressed. PS4, STEAM and Mouse + Keyboard modes send the
+  press as the touchpad's own (in STEAM mode it was also Mute before the 2026-10-27 firmware); the
+  other modes send it as the Misc button, so the row is the Misc mapping (also listed as "Misc
+  (Capture; touchpad press without a touchpad)" in Digital Mappings). USB packet `GP_TOUCH`
   (0x82), sent after each live input packet while the pad reports its touchpad: two touch points
   of 4 bytes as the pads send them, then the click byte.
   Below it, **Motion**: a box that turns with the controller (gyro integrated, levelled by gravity;
