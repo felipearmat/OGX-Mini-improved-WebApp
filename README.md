@@ -63,8 +63,8 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
   is mapped to (OGX-Mini-improved firmware sends unmapped input in D-Input/Debug mode while the web app is open).
 - **Axis Settings, two dots**: with firmware that has the capability `RAW_LIVE_INPUT` (it sends
   the sticks and triggers without the profile's stick / trigger settings while the web app is
-  open), each stick shows a grey dot where the controller is and a green one with the settings
-  being edited applied (what the game gets), and each trigger a grey and a green mark, all the
+  open), each stick shows an orange dot where the controller is and a blue one with the settings
+  being edited applied (what the game gets), and each trigger an orange and a blue mark, all the
   time; the old *Preview* boxes are gone. With older firmware, one dot as the input arrives.
 - **Rumble Test** (USB): plays a rumble on the connected controller the way a game asks for it —
   left (strong) motor, right (weak) motor or both, at a chosen strength (5-100 %) for a chosen time

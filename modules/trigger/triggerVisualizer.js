@@ -18,7 +18,7 @@ export class TriggerVisualizer {
         this.#settings.draw(triggerSettings);
     }
 
-    // dual: as JoystickVisualizer.drawInput (grey = the controller's own, green = with these settings).
+    // dual: as JoystickVisualizer.drawInput (orange = the controller's own, blue = with these settings).
     drawInput(value, settings = null, dual = false) {
         this.#input.draw(value, settings, dual);
     }
@@ -31,8 +31,9 @@ class Input {
 
         this.colors = {
             inputBar: 'rgba(44, 44, 255, 0.91)',
-            raw: 'rgba(110, 110, 110, 0.85)',
-            shaped: 'rgba(30, 150, 60, 0.95)',
+            raw: 'rgba(245, 130, 0, 0.95)',
+            shaped: 'rgba(20, 80, 230, 0.95)',
+            outline: 'rgba(0, 0, 0, 0.75)',  // the marks stay apart from the coloured zones
             stroke: 'rgba(0, 0, 0, 0.72)',
         }
         this.strokeWidth = 4;
@@ -48,8 +49,8 @@ class Input {
         const width = canvas.width - barWidth;
         context.clearRect(0, 0, canvas.width, canvas.height);
         if (dual) {
-            DrawUtils.drawRectangle(context, value * width, 0, barWidth, canvas.height, colors.raw);
-            DrawUtils.drawRectangle(context, shaped * width, 0, barWidth, canvas.height, colors.shaped);
+            DrawUtils.drawRectangle(context, value * width, 0, barWidth, canvas.height, colors.raw, colors.outline);
+            DrawUtils.drawRectangle(context, shaped * width, 0, barWidth, canvas.height, colors.shaped, colors.outline);
         } else {
             DrawUtils.drawRectangle(context, value * width, 0, barWidth, canvas.height, colors.inputBar);
         }

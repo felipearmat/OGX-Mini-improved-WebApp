@@ -18,8 +18,8 @@ export class JoystickVisualizer {
         this.#settings.draw(joystickSettings);
     }
 
-    // dual: the input is the controller's own (firmware with RAW_LIVE_INPUT): a grey dot there
-    // and a green one with these settings applied (what the game gets). Otherwise one dot, as it
+    // dual: the input is the controller's own (firmware with RAW_LIVE_INPUT): an orange dot there
+    // and a blue one with these settings applied (what the game gets). Otherwise one dot, as it
     // arrives (older firmware applies the saved settings itself).
     drawInput(joyX, joyY, settings = null, dual = false) {
         this.#cursor.draw(joyX, joyY, settings, dual);
@@ -36,18 +36,24 @@ class Cursor {
 
         this.colors = {
             cursor: 'rgba(0, 0, 255, 0.91)',
-            raw: 'rgba(110, 110, 110, 0.85)',
-            shaped: 'rgba(30, 150, 60, 0.95)',
+            raw: 'rgba(245, 130, 0, 0.95)',
+            shaped: 'rgba(20, 80, 230, 0.95)',
+            outline: 'rgba(0, 0, 0, 0.75)',  // the dots stay apart from the coloured zones
         }
         this.lastKey = "";
     }
 
-    dot(x, y, color) {
+    dot(x, y, color, outline = null) {
         const { context, centerX, centerY, maxRadius } = this;
         context.beginPath();
         context.arc(centerX + x * maxRadius, centerY + y * maxRadius, 5, 0, Math.PI * 2);
         context.fillStyle = color;
         context.fill();
+        if (outline) {
+            context.strokeStyle = outline;
+            context.lineWidth = 1.5;
+            context.stroke();
+        }
         context.closePath();
     }
 
@@ -74,8 +80,8 @@ class Cursor {
         this.lastKey = key;
         context.clearRect(0, 0, canvas.width, canvas.height);
         if (dual) {
-            this.dot(joyX, joyY, colors.raw);
-            this.dot(shapedX, shapedY, colors.shaped);
+            this.dot(joyX, joyY, colors.raw, colors.outline);
+            this.dot(shapedX, shapedY, colors.shaped, colors.outline);
         } else {
             this.dot(joyX, joyY, colors.cursor);
         }

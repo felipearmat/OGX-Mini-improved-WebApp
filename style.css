@@ -644,5 +644,5 @@ select:disabled {
 /* The diagnostics options first, apart from the measurements below them. */
 #diagOptionsInput { margin-bottom: 12px; }
 .axisLegend { display: block; margin: 4px 0 8px; font-size: 0.9em; }
-.axisLegend .axisRaw { color: rgb(110, 110, 110); }
-.axisLegend .axisShaped { color: rgb(30, 150, 60); }
+.axisLegend .axisRaw { color: rgb(245, 130, 0); }
+.axisLegend .axisShaped { color: rgb(20, 80, 230); }
