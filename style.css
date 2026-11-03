@@ -283,6 +283,14 @@ select:disabled {
     border-bottom: 1px solid #e3e6ea;
 }
 
+/* A cost of the option (e.g. lag), beside its name. */
+.optionWarning {
+    margin-left: 6px;
+    font-size: 0.85em;
+    font-weight: 600;
+    color: #a14f00;
+}
+
 .dongleOption:last-child {
     border-bottom: none;
 }

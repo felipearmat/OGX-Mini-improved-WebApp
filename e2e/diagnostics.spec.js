@@ -66,6 +66,9 @@ test("detailed controller diagnostics are saved live and shown in the report", a
     const flash = page.locator("#dongle-keepLogInFlash");
     await expect(box).toBeVisible();
     await expect(box).not.toBeChecked();  // off by default
+    // Both warn of lag beside their names.
+    await expect(page.locator("label[for=dongle-keepLogInFlash] .optionWarning")).toHaveText("adds a little lag");
+    await expect(page.locator("label[for=dongle-linkDiagnostics] .optionWarning")).toHaveText("adds more lag");
     // It needs "Keep the log in flash": greyed out until that is on.
     if (await flash.isChecked()) {
         await flash.uncheck();

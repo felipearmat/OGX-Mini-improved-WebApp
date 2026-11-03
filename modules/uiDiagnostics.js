@@ -85,6 +85,13 @@ export const UIDiagnostics = {
             const label = document.createElement("label");
             label.htmlFor = id;
             label.textContent = option.label;
+            if (option.warning) {
+                // Lag felt in play with these on (user, 2026-11): shown beside the name, not only in the tip.
+                const warning = document.createElement("span");
+                warning.className = "optionWarning";
+                warning.textContent = option.warning;
+                label.append(" ", warning);
+            }
             Capabilities.addTip(label, option.tip);
             const box = document.createElement("input");
             box.type = "checkbox";

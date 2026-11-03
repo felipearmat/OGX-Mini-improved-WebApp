@@ -80,7 +80,8 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
   (the adapter's report plus the browser and the web app's view of the settings) to send when
   asking for help. Shown only when the firmware answers (OGX-Mini-improved v1.1.0 or later).
   Options there: *Keep the log in flash*, then *Detailed controller diagnostics*, indented below it
-  and greyed out while the log in flash is off (the advanced report is kept there).
+  and greyed out while the log in flash is off (the advanced report is kept there). Each shows its
+  cost beside its name ("adds a little lag", "adds more lag"): lag was felt in play with both on.
 - **Mode colour**: below the colour wheel, a box with the colour code (`#RRGGBB`) — it follows the
   wheel, and a code typed in moves the wheel's marker (and shows on the adapter while you pick).
 - Output modes added to the list: Wii U, PS4, STEAM (DualSense), Mouse + Keyboard.
