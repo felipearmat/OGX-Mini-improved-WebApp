@@ -26,11 +26,16 @@
  *  Version 7, byte 23: keep the log in flash (panel "diagnostics", saved live).
  *  Version 8, byte 7 (unused since version 3): detailed controller diagnostics (panel "diagnostics",
  *  saved live). Same 24 bytes as version 7.
+ *  Version 9, byte 23: the log level (panel "diagnostics", saved live): 0 none, 1 the activity log
+ *  (counters and the event log in RAM: this panel's figures and the log report), 2 that and the log
+ *  kept in flash. Each level needs the one before, and detailed controller diagnostics needs the
+ *  log in flash: turning one off turns off those below it. Options with a "level" read and write
+ *  that byte as levels (version 9 on; version 7 / 8 byte 23 is the log in flash, 0 / 1).
  */
 import { Capabilities } from "./capabilities.js";
 
 export class DongleSettings {
-    static VERSION = Object.freeze(8);
+    static VERSION = Object.freeze(9);
     static SEARCH_MAX_S = Object.freeze(600);
     static SEARCH_NO_LIMIT = Object.freeze(0xFFF);
     static LENGTH = Object.freeze(24);
@@ -43,6 +48,8 @@ export class DongleSettings {
     static IDLE_OFFSET = Object.freeze(16);
     static IDLE_MAX_MIN = Object.freeze(255);
     static V1_LENGTH = Object.freeze(8);
+    static LOG_LEVEL_OFFSET = Object.freeze(23);
+    static LOG_LEVELS_SINCE = Object.freeze(9);
 
     // Byte offsets follow the firmware struct. "choices" options are shown as a dropdown,
     // the others as a checkbox.
@@ -115,7 +122,13 @@ export class DongleSettings {
             tip: "An RGB LED (WS2812B) on GPIO 4 of the ESP32 (RP2040 + ESP32 adapter), in the mode colour.",
         },
         {
-            key: "keepLogInFlash", offset: 23, since: 7, capability: Capabilities.FLASH_LOG, panel: "diagnostics",
+            key: "activityLog", offset: 23, level: 1, since: 9, panel: "diagnostics",
+            label: "Activity log",
+            tip: "The adapter counts each controller's input (rate, late and lost reports, gaps, latency) and keeps a log of what happened (connections, searches, errors) in its RAM: the figures in this panel and the log report. Off, the adapter keeps nothing while playing. Needed for \"Keep the log in flash\".",
+        },
+        {
+            key: "keepLogInFlash", offset: 23, level: 2, since: 7, capability: Capabilities.FLASH_LOG, panel: "diagnostics",
+            requires: "activityLog",
             label: "Keep the log in flash", warning: "adds a little lag",
             tip: "The adapter also saves its log in its flash memory, so what happened away from the computer (playing on a console) can be read afterwards: a log report includes it. It writes only while nothing is being played, and sparingly while playing. Needed for \"Detailed controller diagnostics\".",
         },
@@ -192,8 +205,11 @@ export class DongleSettings {
         }
         this.version = version;
         for (const option of this.availableOptions()) {
-            this.values[option.key] = bytes[option.offset] ? 1 : 0;
+            this.values[option.key] = option.level && version >= DongleSettings.LOG_LEVELS_SINCE
+                ? (bytes[option.offset] >= option.level ? 1 : 0)
+                : (bytes[option.offset] ? 1 : 0);
         }
+        this.#dropUnmet();
         if (version >= 3) {
             this.values.fullSearchSeconds = bytes[9] | ((bytes[10] & 0x0F) << 8);
             this.values.reducedSearchSeconds = (bytes[10] >> 4) | (bytes[11] << 4);
@@ -249,11 +265,35 @@ export class DongleSettings {
     // Options shown in the Bluetooth config and Diagnostics panels: the adapter applies them
     // without a restart. (The status LED options are Adapter Options: saved with its button.)
     #writeLiveOptions(bytes) {
+        this.#dropUnmet();
         for (const option of this.availableOptions()) {
-            if (option.panel && bytes.length > option.offset) {
+            if (option.panel && !option.level && bytes.length > option.offset) {
                 bytes[option.offset] = this.values[option.key] ? 1 : 0;
             }
         }
+        const o = DongleSettings.LOG_LEVEL_OFFSET;
+        if (this.version >= DongleSettings.LOG_LEVELS_SINCE) {
+            bytes[o] = this.values.keepLogInFlash ? 2 : this.values.activityLog ? 1 : 0;
+        } else if (this.version >= 7) {
+            bytes[o] = this.values.keepLogInFlash ? 1 : 0;
+        }
+    }
+
+    // An option whose "requires" is off is off too (detailed diagnostics without the log in flash,
+    // the log in flash without the activity log), as the firmware reads it.
+    #dropUnmet() {
+        const known = this.availableOptions();
+        for (const option of known) {
+            if (option.requires && known.some((o) => o.key === option.requires) && !this.values[option.requires]) {
+                this.values[option.key] = 0;
+            }
+        }
+    }
+
+    // Turn an option on or off; turning one off turns off the options that need it.
+    setOption(key, on) {
+        this.values[key] = on ? 1 : 0;
+        this.#dropUnmet();
     }
 
     #writeBrightness(bytes) {
@@ -294,7 +334,9 @@ export class DongleSettings {
         const bytes = new Uint8Array(DongleSettings.lengthOf(this.version));
         bytes[0] = this.version;
         for (const option of this.availableOptions()) {
-            bytes[option.offset] = this.values[option.key] ? 1 : 0;
+            if (!option.level) {
+                bytes[option.offset] = this.values[option.key] ? 1 : 0;
+            }
         }
         if (this.version >= 3) {
             this.#writeSearchTimes(bytes);
@@ -302,6 +344,7 @@ export class DongleSettings {
         this.#writeMask(bytes);
         this.#writeIdle(bytes);
         this.#writeBrightness(bytes);
+        this.#writeLiveOptions(bytes);  // the log level byte among them
         return bytes;
     }
 }

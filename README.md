@@ -79,9 +79,12 @@ Fork of [MegaCadeDev/OGX-Mini-2026-WebApp](https://github.com/MegaCadeDev/OGX-Mi
   of the session before the switch to D-Input/Debug mode. **Generate log report** saves a JSON file
   (the adapter's report plus the browser and the web app's view of the settings) to send when
   asking for help. Shown only when the firmware answers (OGX-Mini-improved v1.1.0 or later).
-  Options there: *Keep the log in flash*, then *Detailed controller diagnostics*, indented below it
-  and greyed out while the log in flash is off (the advanced report is kept there). Each shows its
-  cost beside its name ("adds a little lag", "adds more lag"): lag was felt in play with both on.
+  Options there, each indented under and greyed out without the one before it, and turned off
+  with it: *Activity log* (firmware with Adapter Options version 9: the counters and the event log
+  behind this panel and the log report; off by default, then the adapter keeps nothing while
+  playing), *Keep the log in flash*, then *Detailed controller diagnostics* (the advanced report is
+  kept in flash). The last two show their cost beside their name ("adds a little lag", "adds more
+  lag"): lag was felt in play with both on.
 - **Mode colour**: below the colour wheel, a box with the colour code (`#RRGGBB`) — it follows the
   wheel, and a code typed in moves the wheel's marker (and shows on the adapter while you pick).
 - Output modes added to the list: Wii U, PS4, STEAM (DualSense), Mouse + Keyboard.

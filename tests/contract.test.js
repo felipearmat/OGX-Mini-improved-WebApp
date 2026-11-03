@@ -30,7 +30,8 @@ const FIELD = {
     statusLedPicoExt: "status_led_pico_ext",
     statusLedEsp32: "status_led_esp32",
     statusLedEsp32Ext: "status_led_esp32_ext",
-    keepLogInFlash: "keep_log_in_flash",
+    activityLog: "log_level",  // byte 23 as levels since version 9
+    keepLogInFlash: "log_level",
 };
 
 test("packet IDs match the firmware", () => {

@@ -98,7 +98,7 @@ export const UIDiagnostics = {
             box.className = "invertCheckbox";
             box.id = id;
             box.addEventListener("change", () => {
-                dongleSettings.values[option.key] = box.checked ? 1 : 0;
+                dongleSettings.setOption(option.key, box.checked);  // off: the options below it too
                 this.updateOptions(dongleSettings);  // its dependent options follow
                 this.setStatus("Saving...");
                 saveLive(() => this.setStatus(`Saved (${new Date().toLocaleTimeString()}).`));
@@ -121,7 +121,9 @@ export const UIDiagnostics = {
             const known = (option.since || 1) <= dongleSettings.version;
             row.classList.toggle("hidden", !known || !capabilities.supports(option.capability));
             box.checked = dongleSettings.values[option.key] !== 0;
-            if (option.requires) {
+            // Its parent counts only where this firmware has it (no activity log before version 9).
+            const parent = option.requires && DongleSettings.OPTIONS.find((o) => o.key === option.requires);
+            if (parent && (parent.since || 1) <= dongleSettings.version) {
                 const needed = dongleSettings.values[option.requires] !== 0;
                 box.disabled = !needed;
                 row.classList.toggle("disabledOption", !needed);
@@ -141,6 +143,9 @@ export const UIDiagnostics = {
         const info = document.getElementById("diagInfo");
         info.textContent = `${report.board} (${report.chip}), firmware ${report.firmware} (${report.build}), ` +
             `mode ${report.output_mode}, up ${Math.round(report.uptime_ms / 1000)} s, last reset: ${report.last_reset}`;
+        if (report.bluetooth && report.bluetooth.activity_log === false) {
+            info.textContent += ". Activity log off: no counters or events (turn it on below, then reproduce the problem)";
+        }
         if (report.last_crash) {
             const k = report.last_crash;
             info.textContent += `. Last crash (${k.when}): ${k.kind}` +

@@ -36,6 +36,7 @@ test("the log kept in flash outlives unplugging the adapter", async ({ page, ada
     const box = page.locator("#dongle-keepLogInFlash");
     await expect(box).toBeVisible();
     await expect(box).not.toBeChecked();  // off by default
+    await expect(page.locator("#dongle-activityLog")).toBeChecked();  // the virtual adapter's build default
     await box.check();
     await expect(page.locator("#diagStatus")).toHaveText(/Saved/);
     expect(adapter.restarts).toBe(0);  // applied live
@@ -85,4 +86,27 @@ test("detailed controller diagnostics are saved live and shown in the report", a
     await page.locator("#button-diagReport").click();
     const report = JSON.parse(await readFile(await (await download).path(), "utf8"));
     expect(report.adapter.bluetooth.link_details).toBe(true);
+});
+
+
+test("turning the activity log off turns off the log levels below it", async ({ page }) => {
+    await connect(page);
+    await showPanel(page, "#button-toggleDiagnostics");
+    const activity = page.locator("#dongle-activityLog");
+    const flash = page.locator("#dongle-keepLogInFlash");
+    const details = page.locator("#dongle-linkDiagnostics");
+    await expect(activity).toBeChecked();
+    await flash.check();
+    await details.check();
+    await expect(page.locator("#diagStatus")).toHaveText(/Saved/);
+    await activity.uncheck();
+    await expect(page.locator("#diagStatus")).toHaveText(/Saved/);
+    await expect(flash).not.toBeChecked();
+    await expect(flash).toBeDisabled();
+    await expect(details).not.toBeChecked();
+    await expect(details).toBeDisabled();
+    await page.locator("#button-diagRefresh").click();
+    await expect(page.locator("#diagInfo")).toContainText("Activity log off");
+    await activity.check();  // back as it was
+    await expect(page.locator("#diagStatus")).toHaveText(/Saved/);
 });

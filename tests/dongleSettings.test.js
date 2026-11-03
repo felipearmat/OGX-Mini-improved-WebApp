@@ -79,3 +79,44 @@ test("D-Input/Debug can't be turned off", () => {
     s.comboDisabledModes = 1 << DongleSettings.DEBUG_MODE;  // a mask that says off
     assert.equal(s.comboEnabled(DongleSettings.DEBUG_MODE), true);
 });
+
+test("version 9: byte 23 is the log level, each level needing the one before", () => {
+    const s = record();
+    assert.equal(s.values.activityLog, 0);
+    s.setOption("activityLog", true);
+    assert.equal(s.liveBytes()[23], 1);
+    s.setOption("keepLogInFlash", true);
+    s.setOption("linkDiagnostics", true);
+    let bytes = s.liveBytes();
+    assert.equal(bytes[23], 2);
+    assert.equal(bytes[7], 1);
+    // Off: the options below it go off too, as the firmware reads them.
+    s.setOption("activityLog", false);
+    bytes = s.liveBytes();
+    assert.equal(bytes[23], 0);
+    assert.equal(bytes[7], 0);
+    assert.equal(s.values.keepLogInFlash, 0);
+    assert.equal(s.getBytes()[23], 0);
+    // Read back: level 2 is both on.
+    bytes[23] = 2;
+    assert.ok(s.setFromBytes(bytes));
+    assert.equal(s.values.activityLog, 1);
+    assert.equal(s.values.keepLogInFlash, 1);
+});
+
+test("version 8: byte 23 is the log in flash (0 / 1), and there is no activity log option", () => {
+    const s = new DongleSettings();
+    const bytes = new Uint8Array(DongleSettings.LENGTH);
+    bytes[0] = 8;
+    bytes[23] = 1;
+    bytes[7] = 1;
+    assert.ok(s.setFromBytes(bytes));
+    assert.ok(!s.availableOptions().some((o) => o.key === "activityLog"));
+    assert.equal(s.values.keepLogInFlash, 1);
+    assert.equal(s.values.linkDiagnostics, 1);
+    s.setOption("keepLogInFlash", false);
+    const out = s.liveBytes();
+    assert.equal(out[23], 0);
+    assert.equal(out[7], 0);
+    assert.equal(s.getBytes()[0], 8);
+});
