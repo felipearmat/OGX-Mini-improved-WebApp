@@ -118,7 +118,7 @@ export const UIDiagnostics = {
             if (!row) {
                 continue;
             }
-            const known = (option.since || 1) <= dongleSettings.version;
+            const known = dongleSettings.availableOptions().includes(option);  // since / until this version
             row.classList.toggle("hidden", !known || !capabilities.supports(option.capability));
             box.checked = dongleSettings.values[option.key] !== 0;
             // Its parent counts only where this firmware has it (no activity log before version 9).

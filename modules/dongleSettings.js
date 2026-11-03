@@ -124,20 +124,20 @@ export class DongleSettings {
         {
             key: "activityLog", offset: 23, level: 1, since: 9, panel: "diagnostics",
             label: "Activity log",
-            tip: "The adapter counts each controller's input (rate, late and lost reports, gaps, latency) and keeps a log of what happened (connections, searches, errors) in its RAM: the figures in this panel and the log report. Off, the adapter keeps nothing while playing. Needed for \"Keep the log in flash\".",
+            tip: "The adapter counts each controller's input (rate, late and lost reports, gaps, latency), keeps a log of what happened (connections, searches, errors) in its RAM and asks the radio for each Bluetooth controller's signal, channels and chip: the figures in this panel and the log report, also streamed on the debug probe point. Measured: no change in the controllers' timing. Off, the adapter keeps nothing while playing. Needed for \"Keep the log in flash\".",
         },
         {
             key: "keepLogInFlash", offset: 23, level: 2, since: 7, capability: Capabilities.FLASH_LOG, panel: "diagnostics",
             requires: "activityLog",
-            label: "Keep the log in flash", warning: "adds a little lag",
+            label: "Keep the log in flash", warning: "may delay a report now and then",
             tip: "The adapter also saves its log in its flash memory, so what happened away from the computer (playing on a console) can be read afterwards: a log report includes it. It writes only while nothing is being played, and sparingly while playing. Not needed with a debug probe reader on the PC.",
         },
         {
-            key: "linkDiagnostics", offset: 7, since: 8, capability: Capabilities.BLUETOOTH, panel: "diagnostics",
-            // Version 9: needs the activity log (its readings also go to the probe point); version 8
-            // firmware still needs the log in flash.
-            label: "Detailed controller diagnostics", requires: ["activityLog", "keepLogInFlash"], warning: "adds more lag",
-            tip: "The report also shows each Bluetooth controller's signal (RSSI), the channels in use, failed contacts, the transmit power and the controller's Bluetooth chip, and the debug probe point records them. The adapter asks the radio for one of them every 0.7 s, so leave it off unless you are looking into a connection problem. Works only with the activity log on.",
+            // Version 8 firmware only: since version 9 the detailed diagnostics come with the
+            // activity log (no cost measured on the debug probe point, 2026-11).
+            key: "linkDiagnostics", offset: 7, since: 8, until: 8, capability: Capabilities.BLUETOOTH, panel: "diagnostics",
+            label: "Detailed controller diagnostics", requires: "keepLogInFlash",
+            tip: "The report also shows each Bluetooth controller's signal (RSSI), the channels in use, failed contacts, the transmit power and the controller's Bluetooth chip. The adapter asks the radio for one of them every 0.7 s. Works only with \"Keep the log in flash\" on.",
         },
     ]);
 

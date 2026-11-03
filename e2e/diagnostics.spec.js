@@ -60,25 +60,15 @@ test("the log kept in flash outlives unplugging the adapter", async ({ page, ada
 });
 
 
-test("detailed controller diagnostics are saved live and shown in the report", async ({ page, adapter }) => {
+test("the detailed controller diagnostics come with the activity log", async ({ page, adapter }) => {
     await connect(page);
     await showPanel(page, "#button-toggleDiagnostics");
-    const box = page.locator("#dongle-linkDiagnostics");
-    const flash = page.locator("#dongle-keepLogInFlash");
-    await expect(box).toBeVisible();
-    await expect(box).not.toBeChecked();  // off by default
-    // Both warn of lag beside their names.
-    await expect(page.locator("label[for=dongle-keepLogInFlash] .optionWarning")).toHaveText("adds a little lag");
-    await expect(page.locator("label[for=dongle-linkDiagnostics] .optionWarning")).toHaveText("adds more lag");
-    // It needs the activity log, not the log in flash: enabled with the log in flash off.
-    if (await flash.isChecked()) {
-        await flash.uncheck();
-        await expect(page.locator("#diagStatus")).toHaveText(/Saved/);
-    }
-    await expect(box).toBeEnabled();
-    await box.check();
-    await expect(page.locator("#diagStatus")).toHaveText(/Saved/);
-    expect(adapter.restarts).toBe(0);  // applied live
+    // No checkbox of their own on version 9 firmware.
+    await expect(page.locator("#dongle-linkDiagnostics")).toBeHidden();
+    await expect(page.locator("#dongle-activityLog")).toBeChecked();
+    await expect(page.locator("label[for=dongle-keepLogInFlash] .optionWarning")).toHaveText("may delay a report now and then");
+    await expect(page.locator("label[for=dongle-activityLog] .optionWarning")).toHaveCount(0);
+    expect(adapter.restarts).toBe(0);
 
     const download = page.waitForEvent("download");
     await page.locator("#button-diagReport").click();
@@ -87,22 +77,18 @@ test("detailed controller diagnostics are saved live and shown in the report", a
 });
 
 
-test("turning the activity log off turns off the log levels below it", async ({ page }) => {
+test("turning the activity log off turns off the log in flash", async ({ page }) => {
     await connect(page);
     await showPanel(page, "#button-toggleDiagnostics");
     const activity = page.locator("#dongle-activityLog");
     const flash = page.locator("#dongle-keepLogInFlash");
-    const details = page.locator("#dongle-linkDiagnostics");
     await expect(activity).toBeChecked();
     await flash.check();
-    await details.check();
     await expect(page.locator("#diagStatus")).toHaveText(/Saved/);
     await activity.uncheck();
     await expect(page.locator("#diagStatus")).toHaveText(/Saved/);
     await expect(flash).not.toBeChecked();
     await expect(flash).toBeDisabled();
-    await expect(details).not.toBeChecked();
-    await expect(details).toBeDisabled();
     await page.locator("#button-diagRefresh").click();
     await expect(page.locator("#diagInfo")).toContainText("Activity log off");
     await activity.check();  // back as it was

@@ -80,16 +80,17 @@ test("D-Input/Debug can't be turned off", () => {
     assert.equal(s.comboEnabled(DongleSettings.DEBUG_MODE), true);
 });
 
-test("version 9: byte 23 is the log level; the log in flash and the detailed diagnostics each need the activity log", () => {
+test("version 9: byte 23 is the log level; the log in flash needs the activity log", () => {
     const s = record();
     assert.equal(s.values.activityLog, 0);
     s.setOption("activityLog", true);
     assert.equal(s.liveBytes()[23], 1);
     s.setOption("keepLogInFlash", true);
-    s.setOption("linkDiagnostics", true);
     let bytes = s.liveBytes();
     assert.equal(bytes[23], 2);
-    assert.equal(bytes[7], 1);
+    // No detailed diagnostics option: they come with the activity log, byte 7 stays zero.
+    assert.ok(!s.availableOptions().some((o) => o.key === "linkDiagnostics"));
+    assert.equal(bytes[7], 0);
     // Off: the options below it go off too, as the firmware reads them.
     s.setOption("activityLog", false);
     bytes = s.liveBytes();
@@ -102,12 +103,6 @@ test("version 9: byte 23 is the log level; the log in flash and the detailed dia
     assert.ok(s.setFromBytes(bytes));
     assert.equal(s.values.activityLog, 1);
     assert.equal(s.values.keepLogInFlash, 1);
-    // The detailed diagnostics with the activity log alone (the probe point records them).
-    s.setOption("keepLogInFlash", false);
-    s.setOption("linkDiagnostics", true);
-    bytes = s.liveBytes();
-    assert.equal(bytes[23], 1);
-    assert.equal(bytes[7], 1);
 });
 
 test("version 8: byte 23 is the log in flash (0 / 1), and there is no activity log option", () => {
