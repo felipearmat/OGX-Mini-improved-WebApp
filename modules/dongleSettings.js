@@ -130,12 +130,14 @@ export class DongleSettings {
             key: "keepLogInFlash", offset: 23, level: 2, since: 7, capability: Capabilities.FLASH_LOG, panel: "diagnostics",
             requires: "activityLog",
             label: "Keep the log in flash", warning: "adds a little lag",
-            tip: "The adapter also saves its log in its flash memory, so what happened away from the computer (playing on a console) can be read afterwards: a log report includes it. It writes only while nothing is being played, and sparingly while playing. Needed for \"Detailed controller diagnostics\".",
+            tip: "The adapter also saves its log in its flash memory, so what happened away from the computer (playing on a console) can be read afterwards: a log report includes it. It writes only while nothing is being played, and sparingly while playing. Not needed with a debug probe reader on the PC.",
         },
         {
             key: "linkDiagnostics", offset: 7, since: 8, capability: Capabilities.BLUETOOTH, panel: "diagnostics",
-            label: "Detailed controller diagnostics", requires: "keepLogInFlash", warning: "adds more lag",
-            tip: "The report also shows each Bluetooth controller's signal (RSSI), the channels in use, failed contacts, the transmit power and the controller's Bluetooth chip. The adapter asks the radio for one of them every 0.7 s, so leave it off unless you are looking into a connection problem. Works only with \"Keep the log in flash\" on.",
+            // Version 9: needs the activity log (its readings also go to the probe point); version 8
+            // firmware still needs the log in flash.
+            label: "Detailed controller diagnostics", requires: ["activityLog", "keepLogInFlash"], warning: "adds more lag",
+            tip: "The report also shows each Bluetooth controller's signal (RSSI), the channels in use, failed contacts, the transmit power and the controller's Bluetooth chip, and the debug probe point records them. The adapter asks the radio for one of them every 0.7 s, so leave it off unless you are looking into a connection problem. Works only with the activity log on.",
         },
     ]);
 
@@ -279,12 +281,23 @@ export class DongleSettings {
         }
     }
 
-    // An option whose "requires" is off is off too (detailed diagnostics without the log in flash,
-    // the log in flash without the activity log), as the firmware reads it.
+    // The option another one needs in this firmware version: "requires" is a key or a list of
+    // keys, the first one this version has (none: nothing needed).
+    static requirement(option, version) {
+        const keys = [].concat(option.requires || []);
+        return keys.find((key) => {
+            const parent = DongleSettings.OPTIONS.find((o) => o.key === key);
+            return parent && (parent.since || 1) <= version;
+        }) || null;
+    }
+
+    // An option whose requirement is off is off too (the log in flash or detailed diagnostics
+    // without the activity log), as the firmware reads it.
     #dropUnmet() {
         const known = this.availableOptions();
         for (const option of known) {
-            if (option.requires && known.some((o) => o.key === option.requires) && !this.values[option.requires]) {
+            const needs = DongleSettings.requirement(option, this.version);
+            if (needs && known.some((o) => o.key === needs) && !this.values[needs]) {
                 this.values[option.key] = 0;
             }
         }

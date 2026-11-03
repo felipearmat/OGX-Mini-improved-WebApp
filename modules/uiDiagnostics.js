@@ -122,9 +122,9 @@ export const UIDiagnostics = {
             row.classList.toggle("hidden", !known || !capabilities.supports(option.capability));
             box.checked = dongleSettings.values[option.key] !== 0;
             // Its parent counts only where this firmware has it (no activity log before version 9).
-            const parent = option.requires && DongleSettings.OPTIONS.find((o) => o.key === option.requires);
-            if (parent && (parent.since || 1) <= dongleSettings.version) {
-                const needed = dongleSettings.values[option.requires] !== 0;
+            const needs = DongleSettings.requirement(option, dongleSettings.version);
+            if (needs) {
+                const needed = dongleSettings.values[needs] !== 0;
                 box.disabled = !needed;
                 row.classList.toggle("disabledOption", !needed);
             }

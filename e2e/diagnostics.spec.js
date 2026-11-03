@@ -70,13 +70,11 @@ test("detailed controller diagnostics are saved live and shown in the report", a
     // Both warn of lag beside their names.
     await expect(page.locator("label[for=dongle-keepLogInFlash] .optionWarning")).toHaveText("adds a little lag");
     await expect(page.locator("label[for=dongle-linkDiagnostics] .optionWarning")).toHaveText("adds more lag");
-    // It needs "Keep the log in flash": greyed out until that is on.
+    // It needs the activity log, not the log in flash: enabled with the log in flash off.
     if (await flash.isChecked()) {
         await flash.uncheck();
         await expect(page.locator("#diagStatus")).toHaveText(/Saved/);
     }
-    await expect(box).toBeDisabled();
-    await flash.check();
     await expect(box).toBeEnabled();
     await box.check();
     await expect(page.locator("#diagStatus")).toHaveText(/Saved/);
