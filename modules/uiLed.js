@@ -25,7 +25,7 @@ export const DEFAULT_COLORS = Object.freeze({
     11: [0x40, 0xA0, 0xFF],  // PS1 / PS2: light azure
     7: [0x40, 0xA0, 0xFF],   // PS Classic: light azure
     15: [0x00, 0x00, 0xFF],  // PS4: blue
-    16: [0xC0, 0x80, 0xFF],  // STEAM: lilac
+    16: [0xA0, 0x00, 0xFF],  // STEAM: purple
     17: [0xFF, 0xFF, 0x00],  // Mouse + Keyboard: yellow
     13: [0x40, 0x40, 0xFF],  // Dreamcast: light blue-violet
 });
