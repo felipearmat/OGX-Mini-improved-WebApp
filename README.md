@@ -141,6 +141,15 @@ The setup builds the virtual adapter from `../OGX-Mini-improved` (CMake and a C+
 `OGXM_VIRTUAL_ADAPTER` an already built binary. CI runs them against the firmware's master, and the
 firmware's CI runs them against this repository's master.
 
+`e2e/real` runs against a **real adapter** on the computer's USB, in D-Input/Debug
+(`OGXM_REAL_ADAPTER=/dev/ttyACM0 npx playwright test -c playwright.real.config.js`): the same page
+fixture with `e2e/realAdapter.js` in place of the virtual adapter, the port a tty in raw mode whose
+disappearance and return count as a restart. So far for the RP2040 + ESP32 hybrid: connecting, the
+ESP32's options and the I2C link figures in the diagnostics report, an option that needs a restart
+(stored, then put back), a mode's combo saved live and a disconnect. Each test puts back what it
+changed; run it through a script that also keeps the whole settings record (the firmware bench's
+`webapp-real-test.sh`). Not in CI.
+
 ## Connecting
 
 - **USB**: plug the adapter in and hold **Start + Right Bumper + D-pad Left** for 3 seconds to

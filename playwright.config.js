@@ -5,6 +5,7 @@ const PORT = 8123;
 
 export default defineConfig({
     testDir: "e2e",
+    testIgnore: "real/**",  // a real adapter on USB: playwright.real.config.js
     globalSetup: "./e2e/buildAdapter.js",
     fullyParallel: true,
     forbidOnly: !!process.env.CI,

@@ -7,12 +7,22 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { VirtualAdapter } from "./virtualAdapter.js";
+import { RealAdapter } from "./realAdapter.js";
 import { adapterBinary } from "./buildAdapter.js";
 
 const FAKE_SERIAL = fileURLToPath(new URL("./fakeSerial.js", import.meta.url));
 
 export const test = base.extend({
     adapter: async ({}, use, testInfo) => {
+        // OGXM_REAL_ADAPTER: a real adapter's serial port (e2e/real, playwright.real.config.js).
+        if (process.env.OGXM_REAL_ADAPTER) {
+            const real = new RealAdapter(process.env.OGXM_REAL_ADAPTER);
+            real.start();
+            await real.ready();
+            await use(real);
+            await real.stop();
+            return;
+        }
         const dir = mkdtempSync(join(tmpdir(), "ogxm-e2e-"));
         const adapter = new VirtualAdapter(adapterBinary(), join(dir, "flash.bin"));
         await adapter.start();
