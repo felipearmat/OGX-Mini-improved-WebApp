@@ -108,8 +108,8 @@ export class DongleSettings {
         },
         {
             key: "statusLedPicoExt", offset: 19, since: 6, capability: Capabilities.STATUS_LED_PICO_EXT,
-            label: "External LED on the Pico (GP6)", defaultValue: 1,
-            tip: "An RGB LED (WS2812B) on GP6 of a Pico 2 / Pico 2 W, in the mode colour.",
+            label: "RGB LED on the Pico (GP6, or the YD-RP2040's own)", defaultValue: 1,
+            tip: "An RGB LED (WS2812B) in the mode colour: on GP6 of a Pico 2 / Pico 2 W, or the YD-RP2040's own RGB LED on the RP2040 + ESP32 adapter (then \"Pico LED\" is its plain LED on GP25).",
         },
         {
             key: "statusLedEsp32", offset: 20, since: 6, capability: Capabilities.STATUS_LED_ESP32,

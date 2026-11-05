@@ -15,6 +15,9 @@ test("connects over USB and reads the hybrid", async ({ page }) => {
     // The hybrid has the ESP32's status LEDs and its transmit power.
     await expect(row(page, "statusLedEsp32")).not.toHaveClass(/unsupported/);
     await expect(row(page, "statusLedEsp32Ext")).not.toHaveClass(/unsupported/);
+    // The YD-RP2040 build: its RGB LED has its own option, apart from the plain LED (GP25).
+    await expect(row(page, "statusLedPico")).not.toHaveClass(/unsupported/);
+    await expect(row(page, "statusLedPicoExt")).not.toHaveClass(/unsupported/);
 });
 
 test("the diagnostics show the RP2040 and the ESP32 with the I2C link figures", async ({ page }) => {
